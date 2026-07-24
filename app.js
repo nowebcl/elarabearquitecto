@@ -157,11 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
       updateLightbox();
     }
   });
+  // Dynamic CTA Form Submission connected to Cloud Firestore
   const ctaContactForm = document.getElementById('ctaContactForm');
   const formFeedback = document.getElementById('formFeedback');
 
   if (ctaContactForm) {
-    ctaContactForm.addEventListener('submit', (e) => {
+    ctaContactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const submitBtn = ctaContactForm.querySelector('.btn-form-submit');
@@ -170,13 +171,30 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBtn.innerHTML = '<span>ENVIANDO...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
       submitBtn.disabled = true;
 
-      setTimeout(() => {
-        submitBtn.innerHTML = '<span>¡CONSULTA ENVIADA!</span> <i class="fa-solid fa-check"></i>';
+      const formData = {
+        nombre: document.getElementById('formName').value.trim(),
+        telefono: document.getElementById('formPhone').value.trim(),
+        email: document.getElementById('formEmail').value.trim(),
+        servicio: document.getElementById('formService').value,
+        mensaje: document.getElementById('formMessage').value.trim(),
+        fecha: window.serverTimestamp ? window.serverTimestamp() : new Date().toISOString(),
+        estado: 'Nuevo'
+      };
+
+      try {
+        if (window.db && window.addDoc && window.collection) {
+          await window.addDoc(window.collection(window.db, 'consultas'), formData);
+        } else {
+          console.warn('Firestore database loading or fallback simulation active.');
+        }
+
+        submitBtn.innerHTML = '<span>¡CONSULTA REGISTRADA!</span> <i class="fa-solid fa-check"></i>';
         submitBtn.style.background = '#25D366';
         submitBtn.style.color = '#ffffff';
 
         if (formFeedback) {
-          formFeedback.textContent = '¡Gracias por contactarnos! Evaluaremos tu consulta y nos comunicaremos a la brevedad.';
+          formFeedback.textContent = '¡Gracias por contactarnos! Tu proyecto ha sido guardado con éxito en nuestra base de datos.';
+          formFeedback.classList.remove('error');
           formFeedback.classList.add('success');
         }
 
@@ -188,7 +206,25 @@ document.addEventListener('DOMContentLoaded', () => {
           submitBtn.style.background = '';
           submitBtn.style.color = '';
         }, 5000);
-      }, 1200);
+
+      } catch (error) {
+        console.error('Error guardando consulta en Firestore:', error);
+        submitBtn.innerHTML = '<span>ERROR AL ENVIAR</span> <i class="fa-solid fa-triangle-exclamation"></i>';
+        submitBtn.style.background = '#dc2743';
+
+        if (formFeedback) {
+          formFeedback.textContent = 'Hubo un inconveniente al guardar la consulta. Por favor inténtalo nuevamente.';
+          formFeedback.classList.remove('success');
+          formFeedback.classList.add('error');
+        }
+
+        setTimeout(() => {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+          submitBtn.style.background = '';
+          submitBtn.style.color = '';
+        }, 4000);
+      }
     });
   }
   

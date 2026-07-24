@@ -402,6 +402,29 @@
     </div>
   </footer>
 
+  <!-- Firebase SDK & Firestore Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBhRM0PFeKfBQetEa40diX7ExbTaxeDkMc",
+      authDomain: "elarabe-b1c76.firebaseapp.com",
+      projectId: "elarabe-b1c76",
+      storageBucket: "elarabe-b1c76.firebasestorage.app",
+      messagingSenderId: "596637175626",
+      appId: "1:596637175626:web:dfcbfc1fc88f99afd27bb3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.addDoc = addDoc;
+    window.collection = collection;
+    window.serverTimestamp = serverTimestamp;
+  </script>
+
   <script src="app.js"></script>
 </body>
 </html>
