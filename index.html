@@ -13,9 +13,8 @@
   <!-- Navigation -->
   <nav class="navbar">
     <div class="container nav-container">
-      <a href="#" class="brand-logo">
-        <span class="brand-ea">EL ARABE</span>
-        <span class="brand-text">ARQUITECTO</span>
+      <a href="#" class="brand-logo" aria-label="El Arabe Arquitecto">
+        <img src="assets/logo2.png" alt="El Arabe Arquitecto" class="brand-logo-img">
       </a>
       <ul class="nav-links">
         <li><a href="#" class="nav-link">Inicio</a></li>
@@ -24,12 +23,20 @@
         <li><a href="#nosotros" class="nav-link">Nosotros</a></li>
         <li><a href="#contacto" class="nav-link">Contacto</a></li>
       </ul>
+      <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Abrir menú de navegación">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+        <span class="bar bar-3"></span>
+      </button>
     </div>
   </nav>
 
   <!-- Hero Section -->
   <header class="hero">
-    <img src="assets/project-1.jpg" alt="Arquitectura Sur de Chile" class="hero-bg">
+    <video autoplay loop muted playsinline poster="assets/project-1.jpg" class="hero-bg">
+      <source src="assets/home.mp4" type="video/mp4">
+      Tu navegador no soporta el formato de video.
+    </video>
     <div class="hero-overlay"></div>
     <div class="hero-blueprint"></div>
     
@@ -38,15 +45,11 @@
       <p class="hero-subtitle">Arquitectura.<br>Regularización.<br>Diseño Desde Cero.</p>
       
       <div class="hero-location">Puerto Montt - Puerto Varas - Región de Los Lagos</div>
-      
-      <a href="https://wa.me/56900000000" target="_blank" class="btn-transparent">
-        Solicitar Evaluación <i class="fa-solid fa-arrow-right"></i>
-      </a>
     </div>
 
     <div class="scroll-indicator">
       <span class="text-small-caps" style="font-size: 0.6rem;">Desliza</span>
-      <i class="fa-solid fa-arrow-down" style="font-weight: 300;"></i>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="scroll-arrow"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
     </div>
   </header>
 
@@ -97,27 +100,90 @@
     </div>
   </section>
 
-  <!-- Projects Section -->
+  <!-- Projects / Gallery Section -->
   <section class="projects" id="proyectos">
     <div class="container">
       <div class="projects-header">
-        <h2 class="projects-title">PROYECTOS</h2>
-        <a href="#" class="projects-link">Ver todos los proyectos <i class="fa-solid fa-arrow-right"></i></a>
+        <div>
+          <div class="text-small-caps small-heading">Portafolio</div>
+          <h2 class="projects-title">GALERÍA DE PROYECTOS</h2>
+        </div>
+        
+        <!-- Gallery Filter Buttons -->
+        <div class="gallery-filters">
+          <button class="filter-btn active" data-filter="all">Todos</button>
+          <button class="filter-btn" data-filter="residencial">Residencial</button>
+          <button class="filter-btn" data-filter="diseno">Diseño</button>
+          <button class="filter-btn" data-filter="regularizacion">Regularización</button>
+        </div>
       </div>
       
-      <div class="projects-grid">
-        <div class="project-card">
-          <img src="assets/project-2.jpg" alt="Proyecto 1">
+      <!-- Gallery Grid -->
+      <div class="projects-grid gallery-grid" id="galleryGrid">
+        <div class="project-card gallery-item" data-category="residencial" data-src="assets/galería/casa 1.png" data-title="Casa Residencial Los Lagos" data-desc="Diseño y construcción residencial adaptada al entorno del sur de Chile.">
+          <img src="assets/galería/casa 1.png" alt="Casa Residencial Los Lagos" loading="lazy">
+          <div class="gallery-overlay">
+            <span class="gallery-category">Residencial</span>
+            <h3 class="gallery-item-title">Casa Residencial Los Lagos</h3>
+            <div class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+          </div>
         </div>
-        <div class="project-card">
-          <img src="assets/project-1.jpg" alt="Proyecto 2">
+        
+        <div class="project-card gallery-item" data-category="diseno" data-src="assets/galería/casa2..png" data-title="Arquitectura Moderna" data-desc="Anteproyecto y volumetría residencial contemporánea.">
+          <img src="assets/galería/casa2..png" alt="Arquitectura Moderna" loading="lazy">
+          <div class="gallery-overlay">
+            <span class="gallery-category">Diseño</span>
+            <h3 class="gallery-item-title">Arquitectura Moderna</h3>
+            <div class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+          </div>
         </div>
-        <div class="project-card">
-          <img src="assets/project-3.jpg" alt="Proyecto 3">
+        
+        <div class="project-card gallery-item" data-category="diseno" data-src="assets/galería/cocina.jpg" data-title="Diseño de Interiores & Cocina" data-desc="Remodelación e interiorismo arquitectónico de alta gama.">
+          <img src="assets/galería/cocina.jpg" alt="Diseño de Interiores & Cocina" loading="lazy">
+          <div class="gallery-overlay">
+            <span class="gallery-category">Diseño</span>
+            <h3 class="gallery-item-title">Interiorismo & Cocina</h3>
+            <div class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+          </div>
+        </div>
+        
+        <div class="project-card gallery-item" data-category="regularizacion" data-src="assets/galería/90.jpg" data-title="Regularización de Vivienda" data-desc="Elaboración de expediente técnico para permiso de edificación y recepción final.">
+          <img src="assets/galería/90.jpg" alt="Regularización de Vivienda" loading="lazy">
+          <div class="gallery-overlay">
+            <span class="gallery-category">Regularización</span>
+            <h3 class="gallery-item-title">Regularización Ley de Monos</h3>
+            <div class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+          </div>
+        </div>
+
+        <div class="project-card gallery-item" data-category="regularizacion" data-src="assets/galería/91.jpg" data-title="Levantamiento & Elevaciones" data-desc="Planos y regularización de ampliación habitacional.">
+          <img src="assets/galería/91.jpg" alt="Levantamiento & Elevaciones" loading="lazy">
+          <div class="gallery-overlay">
+            <span class="gallery-category">Regularización</span>
+            <h3 class="gallery-item-title">Levantamiento & Planos</h3>
+            <div class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox-modal" id="lightboxModal" aria-hidden="true">
+    <div class="lightbox-backdrop" id="lightboxBackdrop"></div>
+    <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar vista previa">&times;</button>
+    <button class="lightbox-prev" id="lightboxPrev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="lightbox-next" id="lightboxNext" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+    <div class="lightbox-content">
+      <img src="" alt="Vista previa de proyecto" id="lightboxImage">
+      <div class="lightbox-caption">
+        <span id="lightboxCategory" class="gallery-category"></span>
+        <h3 id="lightboxTitle"></h3>
+        <p id="lightboxDesc"></p>
+        <span id="lightboxCounter" class="lightbox-counter"></span>
+      </div>
+    </div>
+  </div>
 
   <!-- Process Section -->
   <section class="process">
@@ -167,13 +233,13 @@
   <section class="about" id="nosotros">
     <div class="container about-layout">
       <div class="about-image">
-        <img src="assets/project-4.jpg" alt="Arquitectura Sur de Chile">
+        <img src="assets/nosotros.png" alt="Sobre Nosotros - El Arabe Arquitecto">
       </div>
       <div class="about-content">
         <div class="text-small-caps small-heading">Sobre Nosotros</div>
-        <h2>No creemos que la arquitectura termine cuando se entrega un plano.</h2>
-        <p>Creemos que comienza cuando una familia puede vivir, construir o vender con tranquilidad.</p>
-        <p>En El Arabe Arquitecto diseñamos proyectos que cumplen la normativa, respetan el lugar donde se emplazan y acompañan a cada cliente desde la primera reunión hasta la aprobación final.</p>
+        <h2>La arquitectura no termina con un plano.</h2>
+        <p>Comienza cuando puedes vivir, construir o vender con tranquilidad.</p>
+        <p>En nuestra oficina de arquitectura acompañamos a nuestros clientes desde la primera idea hasta la aprobación municipal, diseñando proyectos que cumplen la normativa, respetan el entorno y aumentan el valor de cada propiedad.</p>
         
         <a href="#" class="btn-transparent btn-dark" style="color:var(--text-dark); margin-top:2rem;">
           Conoce más sobre nosotros <i class="fa-solid fa-arrow-right"></i>
@@ -184,17 +250,20 @@
 
   <!-- Bottom CTA -->
   <section class="cta-bottom">
-    <img src="assets/project-3.jpg" alt="Interior Architecture" class="cta-bg">
+    <video autoplay loop muted playsinline poster="assets/project-3.jpg" class="cta-bg">
+      <source src="assets/pad.mp4" type="video/mp4">
+      Tu navegador no soporta el formato de video.
+    </video>
     <div class="container cta-layout">
       <div>
         <h2 class="cta-title">TU PROYECTO MERECE<br>HACERSE BIEN DESDE<br>EL PRINCIPIO.</h2>
       </div>
       <div class="cta-actions">
-        <a href="#" class="btn-transparent">
-          Solicita una Evaluación <i class="fa-solid fa-arrow-right"></i>
-        </a>
         <a href="https://wa.me/56900000000" target="_blank" class="btn-whatsapp-style">
-          <i class="fa-brands fa-whatsapp"></i> Escríbenos por WhatsApp
+          <span class="btn-wa-inner">
+            <i class="fa-brands fa-whatsapp"></i> Escríbenos por WhatsApp
+          </span>
+          <span class="badge-pronto">PRONTO</span>
         </a>
       </div>
     </div>
@@ -206,50 +275,60 @@
       <div class="footer-grid">
         
         <div class="footer-brand">
-          <a href="#" class="brand-logo">
-            <span class="brand-ea" style="font-size: 2.5rem;">EL ARABE</span>
-            <span class="brand-text">ARQUITECTO</span>
+          <a href="#" class="brand-logo" aria-label="El Arabe Arquitecto">
+            <img src="assets/logo2.png" alt="El Arabe Arquitecto" class="brand-logo-img footer-logo-img">
           </a>
           <p style="margin-top: 1rem; color: #666; max-width: 250px;">Especialistas en regularización de viviendas, diseño arquitectónico, permisos municipales y construcción en el sur de Chile.</p>
+          
+          <div class="footer-socials">
+            <a href="https://www.instagram.com/elarabearquitecto" target="_blank" rel="noopener" aria-label="Instagram" class="social-link instagram">
+              <i class="fa-brands fa-instagram"></i>
+            </a>
+            <a href="https://www.tiktok.com/@elarabearquitecto" target="_blank" rel="noopener" aria-label="TikTok" class="social-link tiktok">
+              <i class="fa-brands fa-tiktok"></i>
+            </a>
+          </div>
         </div>
 
         <div class="footer-col">
           <h4>SERVICIOS</h4>
           <ul>
-            <li><a href="#">Regularización de Viviendas</a></li>
-            <li><a href="#">Diseño Arquitectónico</a></li>
-            <li><a href="#">Subdivisión de Terrenos</a></li>
-            <li><a href="#">Permisos Municipales</a></li>
-            <li><a href="#">Recepción Final</a></li>
-            <li><a href="#">Construcción</a></li>
+            <li><a href="#servicios">Regularización de Viviendas</a></li>
+            <li><a href="#servicios">Diseño Arquitectónico</a></li>
+            <li><a href="#servicios">Subdivisión de Terrenos</a></li>
+            <li><a href="#servicios">Permisos Municipales</a></li>
+            <li><a href="#servicios">Recepción Final</a></li>
+            <li><a href="#servicios">Construcción</a></li>
           </ul>
         </div>
 
         <div class="footer-col">
           <h4>PROYECTOS</h4>
           <ul>
-            <li><a href="#">Viviendas</a></li>
-            <li><a href="#">Cabañas</a></li>
-            <li><a href="#">Ampliaciones</a></li>
-            <li><a href="#">Subdivisiones</a></li>
-            <li><a href="#">Remodelaciones</a></li>
+            <li><a href="#proyectos">Viviendas</a></li>
+            <li><a href="#proyectos">Cabañas</a></li>
+            <li><a href="#proyectos">Ampliaciones</a></li>
+            <li><a href="#proyectos">Subdivisiones</a></li>
+            <li><a href="#proyectos">Remodelaciones</a></li>
           </ul>
         </div>
 
         <div class="footer-col">
           <h4>INFORMACIÓN</h4>
           <ul>
-            <li><a href="#">Nosotros</a></li>
-            <li><a href="#">Blog</a></li>
-            <li><a href="#">Preguntas Frecuentes</a></li>
+            <li><a href="#nosotros">Nosotros</a></li>
+            <li><a href="#proyectos">Portafolio</a></li>
+            <li><a href="#contacto">Contacto</a></li>
           </ul>
         </div>
 
         <div class="footer-col">
-          <h4>CONTACTO</h4>
+          <h4>CONTACTO & REDES</h4>
           <div class="contact-item">
             <i class="fa-solid fa-phone"></i>
-            <span>+56 9 XXXXXXXX</span>
+            <span style="display: flex; align-items: center; gap: 0.5rem; color: #aaa;">
+              Teléfono: <span class="badge-pronto">PRONTO</span>
+            </span>
           </div>
           <div class="contact-item">
             <i class="fa-regular fa-envelope"></i>
@@ -257,7 +336,17 @@
           </div>
           <div class="contact-item">
             <i class="fa-solid fa-location-dot"></i>
-            <span>Puerto Montt, Chile</span>
+            <span>Puerto Montt - Puerto Varas, Chile</span>
+          </div>
+          <div class="contact-item" style="margin-top: 1.25rem;">
+            <div class="social-buttons-wrapper">
+              <a href="https://www.instagram.com/elarabearquitecto" target="_blank" rel="noopener" class="social-btn instagram">
+                <i class="fa-brands fa-instagram"></i> Instagram
+              </a>
+              <a href="https://www.tiktok.com/@elarabearquitecto" target="_blank" rel="noopener" class="social-btn tiktok">
+                <i class="fa-brands fa-tiktok"></i> TikTok
+              </a>
+            </div>
           </div>
         </div>
 
