@@ -157,5 +157,39 @@ document.addEventListener('DOMContentLoaded', () => {
       updateLightbox();
     }
   });
+  const ctaContactForm = document.getElementById('ctaContactForm');
+  const formFeedback = document.getElementById('formFeedback');
+
+  if (ctaContactForm) {
+    ctaContactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const submitBtn = ctaContactForm.querySelector('.btn-form-submit');
+      const originalText = submitBtn.innerHTML;
+      
+      submitBtn.innerHTML = '<span>ENVIANDO...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
+      submitBtn.disabled = true;
+
+      setTimeout(() => {
+        submitBtn.innerHTML = '<span>¡CONSULTA ENVIADA!</span> <i class="fa-solid fa-check"></i>';
+        submitBtn.style.background = '#25D366';
+        submitBtn.style.color = '#ffffff';
+
+        if (formFeedback) {
+          formFeedback.textContent = '¡Gracias por contactarnos! Evaluaremos tu consulta y nos comunicaremos a la brevedad.';
+          formFeedback.classList.add('success');
+        }
+
+        ctaContactForm.reset();
+
+        setTimeout(() => {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+          submitBtn.style.background = '';
+          submitBtn.style.color = '';
+        }, 5000);
+      }, 1200);
+    });
+  }
   
 });

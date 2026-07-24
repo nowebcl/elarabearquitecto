@@ -257,17 +257,60 @@
     <div class="container cta-layout">
       <div>
         <h2 class="cta-title">TU PROYECTO MERECE<br>HACERSE BIEN DESDE<br>EL PRINCIPIO.</h2>
+        <p style="margin-top: 1.5rem; color: rgba(255,255,255,0.7); max-width: 420px;">Envíanos los detalles de tu propiedad y te evaluamos el proyecto sin compromiso.</p>
       </div>
-      <div class="cta-actions">
-        <a href="https://wa.me/56900000000" target="_blank" class="btn-whatsapp-style">
-          <span class="btn-wa-inner">
-            <i class="fa-brands fa-whatsapp"></i> Escríbenos por WhatsApp
-          </span>
-          <span class="badge-pronto">PRONTO</span>
-        </a>
+      
+      <div class="cta-form-container">
+        <form class="cta-dynamic-form" id="ctaContactForm">
+          <h3 class="form-title">CONSULTA TU PROYECTO</h3>
+          
+          <div class="form-group">
+            <input type="text" id="formName" name="name" placeholder="Nombre completo *" required>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <input type="tel" id="formPhone" name="phone" placeholder="Teléfono / WhatsApp *" required>
+            </div>
+            <div class="form-group">
+              <input type="email" id="formEmail" name="email" placeholder="Correo electrónico *" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <select id="formService" name="service" required>
+              <option value="" disabled selected>Tipo de servicio requerido *</option>
+              <option value="regularizacion">Regularización de Vivienda</option>
+              <option value="diseno">Diseño Arquitectónico</option>
+              <option value="subdivision">Subdivisión de Terreno</option>
+              <option value="permisos">Permisos Municipales & Recepción Final</option>
+              <option value="construccion">Construcción</option>
+              <option value="otro">Otro Proyecto</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <textarea id="formMessage" name="message" rows="3" placeholder="Detalles de tu propiedad o mensaje..." required></textarea>
+          </div>
+          
+          <button type="submit" class="btn-form-submit">
+            <span>ENVIAR CONSULTA</span>
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+
+          <div class="form-feedback" id="formFeedback"></div>
+        </form>
       </div>
     </div>
   </section>
+
+  <!-- Floating WhatsApp Button (Bottom-Left) -->
+  <div class="whatsapp-float-container">
+    <a href="https://wa.me/56900000000" target="_blank" rel="noopener" class="whatsapp-float-btn" aria-label="WhatsApp (Pronto)">
+      <i class="fa-brands fa-whatsapp"></i>
+      <span class="float-badge-pronto">PRONTO</span>
+    </a>
+  </div>
 
   <!-- Footer -->
   <footer class="footer" id="contacto">
