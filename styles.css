@@ -1189,6 +1189,20 @@ body.no-scroll {
   justify-content: space-between;
   border-top: 1px solid rgba(255,255,255,0.05);
   padding-top: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.developer-link {
+  color: var(--text-light);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.developer-link:hover {
+  color: #d4af37;
+  text-decoration: underline;
 }
 
 /* Responsive */
