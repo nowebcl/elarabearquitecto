@@ -374,6 +374,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 8. Admin Mode Guard & Live Visual Text Editing
   function initVisualEditorMode() {
+    // SECURITY: Never enable editor mode unless we are embedded inside the admin panel iframe.
+    if (window.self === window.top) {
+      return;
+    }
+
     if (!window.auth || !window.onAuthStateChanged) {
       setTimeout(initVisualEditorMode, 150);
       return;
