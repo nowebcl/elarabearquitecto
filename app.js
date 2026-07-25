@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (formFeedback) {
-          formFeedback.textContent = 'Hubo un error al enviar tu mensaje. Verifica tu conexión o base de datos.';
+          formFeedback.textContent = 'Hubo un error al enviar tu mensaje: ' + (error.message || error);
           formFeedback.classList.remove('success');
           formFeedback.classList.add('error');
         }

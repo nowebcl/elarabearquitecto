@@ -989,6 +989,13 @@ body.no-scroll {
   color: #25D366;
 }
 
+.form-feedback.error {
+  display: block;
+  background: rgba(220, 39, 67, 0.15);
+  border: 1px solid #dc2743;
+  color: #ff4d6d;
+}
+
 /* Floating WhatsApp Button (Bottom Left) */
 .whatsapp-float-container {
   position: fixed;
