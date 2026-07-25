@@ -548,3 +548,54 @@
     flex-direction: column;
   }
 }
+
+/* ==========================================
+   SPLIT PREVIEW MODE (ELEMENTOR STYLE LAYOUT)
+   ========================================== */
+.admin-main.split-preview-active {
+  width: 96%;
+  max-width: 1750px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 46% 52%;
+  gap: 2%;
+  align-items: start;
+}
+
+.admin-main.split-preview-active .dashboard-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.live-preview-wrapper {
+  background: rgba(20, 21, 23, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  position: sticky;
+  top: 90px;
+  height: 82vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+}
+
+.live-preview-header {
+  background: rgba(14, 14, 14, 0.95);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #d4af37;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.live-preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}

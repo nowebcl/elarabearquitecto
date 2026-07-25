@@ -328,5 +328,111 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ==========================================
+  // ELEMENTOR-STYLE LIVE VISUAL INLINE EDITOR
+  // ==========================================
+  function initVisualEditorMode() {
+    if (!window.auth || !window.onAuthStateChanged) {
+      setTimeout(initVisualEditorMode, 300);
+      return;
+    }
+
+    const visualEditorBar = document.getElementById('visualEditorBar');
+    const btnToggleInlineEdit = document.getElementById('btnToggleInlineEdit');
+    const btnSaveInlineVisual = document.getElementById('btnSaveInlineVisual');
+    const toggleEditText = document.getElementById('toggleEditText');
+
+    const editableIds = [
+      'heroTitle', 'heroSubtitle', 'heroLocation',
+      'introHeading', 'introTitle', 'aboutTitle',
+      'aboutP1', 'aboutP2', 'ctaTitle', 'ctaDesc'
+    ];
+
+    let isEditingActive = false;
+
+    window.onAuthStateChanged(window.auth, (user) => {
+      if (user && visualEditorBar) {
+        visualEditorBar.style.display = 'flex';
+        document.body.classList.add('editor-mode-active');
+      } else if (visualEditorBar) {
+        visualEditorBar.style.display = 'none';
+        document.body.classList.remove('editor-mode-active');
+      }
+    });
+
+    if (btnToggleInlineEdit) {
+      btnToggleInlineEdit.addEventListener('click', () => {
+        isEditingActive = !isEditingActive;
+
+        editableIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.contentEditable = isEditingActive ? 'true' : 'false';
+            if (isEditingActive) {
+              el.classList.add('editable-active');
+            } else {
+              el.classList.remove('editable-active');
+            }
+          }
+        });
+
+        if (isEditingActive) {
+          if (toggleEditText) toggleEditText.textContent = 'Desactivar Edición Directa';
+          if (btnSaveInlineVisual) btnSaveInlineVisual.style.display = 'flex';
+          btnToggleInlineEdit.style.background = 'rgba(212, 175, 55, 0.25)';
+          btnToggleInlineEdit.style.borderColor = '#d4af37';
+        } else {
+          if (toggleEditText) toggleEditText.textContent = 'Editar Textos Directamente';
+          if (btnSaveInlineVisual) btnSaveInlineVisual.style.display = 'none';
+          btnToggleInlineEdit.style.background = '';
+          btnToggleInlineEdit.style.borderColor = '';
+        }
+      });
+    }
+
+    if (btnSaveInlineVisual) {
+      btnSaveInlineVisual.addEventListener('click', async () => {
+        btnSaveInlineVisual.disabled = true;
+        btnSaveInlineVisual.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>PUBLICANDO...</span>';
+
+        const updatedData = {
+          heroTitle: document.getElementById('heroTitle') ? document.getElementById('heroTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+          heroSubtitle: document.getElementById('heroSubtitle') ? document.getElementById('heroSubtitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+          heroLocation: document.getElementById('heroLocation') ? document.getElementById('heroLocation').textContent.trim() : '',
+          introHeading: document.getElementById('introHeading') ? document.getElementById('introHeading').textContent.trim() : '',
+          introTitle: document.getElementById('introTitle') ? document.getElementById('introTitle').textContent.trim() : '',
+          aboutTitle: document.getElementById('aboutTitle') ? document.getElementById('aboutTitle').textContent.trim() : '',
+          aboutP1: document.getElementById('aboutP1') ? document.getElementById('aboutP1').textContent.trim() : '',
+          aboutP2: document.getElementById('aboutP2') ? document.getElementById('aboutP2').textContent.trim() : '',
+          ctaTitle: document.getElementById('ctaTitle') ? document.getElementById('ctaTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+          ctaDesc: document.getElementById('ctaDesc') ? document.getElementById('ctaDesc').textContent.trim() : '',
+          updatedAt: new Date().toISOString()
+        };
+
+        try {
+          if (window.db && window.doc && window.setDoc) {
+            await window.setDoc(window.doc(window.db, 'site_content', 'landing'), updatedData, { merge: true });
+          }
+
+          btnSaveInlineVisual.innerHTML = '<i class="fa-solid fa-check"></i> <span>¡PUBLICADO EN FIRESTORE!</span>';
+          btnSaveInlineVisual.style.background = '#25D366';
+
+          setTimeout(() => {
+            btnSaveInlineVisual.disabled = false;
+            btnSaveInlineVisual.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span>GUARDAR CAMBIOS EN VIVO</span>';
+            btnSaveInlineVisual.style.background = '';
+          }, 3500);
+
+        } catch (error) {
+          console.error('Error publicando cambios visuales:', error);
+          btnSaveInlineVisual.disabled = false;
+          btnSaveInlineVisual.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>ERROR AL PUBLICAR</span>';
+        }
+      });
+    }
+  }
+
+  initVisualEditorMode();
   
 });

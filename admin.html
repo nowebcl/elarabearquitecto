@@ -20,6 +20,9 @@
       </div>
 
       <div class="admin-user-info" id="adminUserInfo" style="display: none;">
+        <button id="btnToggleSplitPreview" class="btn-primary-admin" style="background: rgba(212,175,55,0.15); color: #d4af37; border: 1px solid rgba(212,175,55,0.4); font-size: 0.78rem;">
+          <i class="fa-solid fa-table-columns"></i> <span id="splitPreviewText">Vista Previa Live Elementor</span>
+        </button>
         <span id="userEmailBadge" class="user-badge"></span>
         <button id="btnLogout" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button>
       </div>
@@ -244,6 +247,17 @@
         </div>
       </section>
 
+    </div>
+
+    <!-- LIVE PREVIEW WRAPPER FOR SPLIT ELEMENTOR VIEW -->
+    <div id="livePreviewWrapper" class="live-preview-wrapper" style="display: none;">
+      <div class="live-preview-header">
+        <span><i class="fa-solid fa-desktop"></i> VISTA PREVIA EN VIVO DE LA WEB</span>
+        <a href="index.html" target="_blank" style="color: #d4af37; text-decoration: none; font-size: 0.78rem;">
+          Abrir en pestaña nueva <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+      <iframe src="index.html" id="livePreviewIframe" class="live-preview-iframe"></iframe>
     </div>
   </main>
 

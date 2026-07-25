@@ -425,3 +425,29 @@ function showToast(msg) {
     toastNotification.classList.remove('active');
   }, 4000);
 }
+
+// Toggle Split Live Elementor Preview Mode
+const btnToggleSplitPreview = document.getElementById('btnToggleSplitPreview');
+const livePreviewWrapper = document.getElementById('livePreviewWrapper');
+const adminMainContainer = document.querySelector('.admin-main');
+const splitPreviewText = document.getElementById('splitPreviewText');
+
+if (btnToggleSplitPreview) {
+  let isSplitActive = false;
+  btnToggleSplitPreview.addEventListener('click', () => {
+    isSplitActive = !isSplitActive;
+    if (isSplitActive) {
+      if (adminMainContainer) adminMainContainer.classList.add('split-preview-active');
+      if (livePreviewWrapper) livePreviewWrapper.style.display = 'flex';
+      if (splitPreviewText) splitPreviewText.textContent = 'Cerrar Vista Dividida';
+      btnToggleSplitPreview.style.background = '#d4af37';
+      btnToggleSplitPreview.style.color = '#111';
+    } else {
+      if (adminMainContainer) adminMainContainer.classList.remove('split-preview-active');
+      if (livePreviewWrapper) livePreviewWrapper.style.display = 'none';
+      if (splitPreviewText) splitPreviewText.textContent = 'Vista Previa Live Elementor';
+      btnToggleSplitPreview.style.background = '';
+      btnToggleSplitPreview.style.color = '';
+    }
+  });
+}
