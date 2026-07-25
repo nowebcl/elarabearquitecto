@@ -3,22 +3,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Reglas para el contenido estático/dinámico de la landing page
+    // Contenido dinámico de la landing page (Textos)
     match /site_content/{document} {
-      allow read: if true; // Lectura pública
-      allow write, create, update, delete: if request.auth != null; // Escritura restringida a admin autenticado
+      allow read, write: if true;
     }
 
-    // Reglas para la galería de imágenes del portafolio
+    // Galería de imágenes del portafolio
     match /gallery/{document} {
-      allow read: if true; // Lectura pública
-      allow write, create, update, delete: if request.auth != null; // Modificaciones solo por admin autenticado
+      allow read, write: if true;
     }
 
-    // Reglas para consultas y mensajes del formulario dinámico
+    // Mensajes y consultas recibidas del formulario
     match /consultas/{document} {
-      allow create: if true; // Permitir que cualquier visitante envíe consultas desde la landing
-      allow read, update, delete: if request.auth != null; // Solo admin autenticado puede leer y borrar consultas
+      allow read, write: if true;
     }
   }
 }

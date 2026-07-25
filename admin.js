@@ -1,4 +1,4 @@
-// Admin CMS Top Bar & Visual Editor JavaScript - El Arabe Arquitecto
+// Minimal Admin CMS Top Bar & Visual Editor JavaScript - El Arabe Arquitecto
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getAuth, 
@@ -52,17 +52,15 @@ const adminConsultasList = document.getElementById('adminConsultasList');
 const toastNotification = document.getElementById('toastNotification');
 
 // ==========================================
-// 1. ROUTE GUARD & AUTHENTICATION
+// 1. AUTHENTICATION & SESSION GUARD
 // ==========================================
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // Session Active -> Show Top Bar & Visual Editor View
     if (adminTopBar) adminTopBar.style.display = 'flex';
     if (loginView) loginView.style.display = 'none';
     if (viewVisualEditor) viewVisualEditor.style.display = 'flex';
     if (viewConsultas) viewConsultas.style.display = 'none';
 
-    // Reload iframe to ensure fresh edit mode
     if (visualEditorIframe && !visualEditorIframe.src) {
       visualEditorIframe.src = 'index.html';
     }
@@ -70,7 +68,6 @@ onAuthStateChanged(auth, (user) => {
     subscribeConsultasList();
 
   } else {
-    // No Session -> Show Login Card
     if (adminTopBar) adminTopBar.style.display = 'none';
     if (loginView) loginView.style.display = 'block';
     if (viewVisualEditor) viewVisualEditor.style.display = 'none';
@@ -88,20 +85,16 @@ if (loginForm) {
     const password = loginPassword.value.trim();
 
     btnLogin.disabled = true;
-    btnLogin.innerHTML = '<span>INICIANDO SESIÓN...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
+    btnLogin.innerHTML = '<span>INICIANDO...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      showToast('¡Sesión iniciada con éxito!');
+      showToast('¡Sesión iniciada!');
     } catch (error) {
       console.error('Error de login:', error);
       if (loginError) {
         loginError.style.display = 'block';
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-          loginError.textContent = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
-        } else {
-          loginError.textContent = `Error de autenticación: ${error.message}`;
-        }
+        loginError.textContent = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
       }
     } finally {
       btnLogin.disabled = false;
@@ -115,14 +108,14 @@ if (btnTopLogout) {
   btnTopLogout.addEventListener('click', async () => {
     try {
       await signOut(auth);
-      showToast('Sesión cerrada correctamente');
+      showToast('Sesión cerrada');
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
     }
   });
 }
 
-// Top Bar Tabs Navigation
+// Tabs Navigation
 if (tabBtnVisualEditor) {
   tabBtnVisualEditor.addEventListener('click', () => {
     tabBtnVisualEditor.classList.add('active');
@@ -141,11 +134,13 @@ if (tabBtnConsultas) {
   });
 }
 
-// Top Bar Save Live Button
+// Minimal Save Button Action
 if (btnTopSaveLive) {
   btnTopSaveLive.addEventListener('click', async () => {
     btnTopSaveLive.disabled = true;
-    btnTopSaveLive.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>GUARDANDO...</span>';
+    const saveLabel = btnTopSaveLive.querySelector('.save-label');
+    const originalText = saveLabel ? saveLabel.textContent : 'Guardar';
+    if (saveLabel) saveLabel.textContent = 'Guardando...';
 
     try {
       let iframeDoc = null;
@@ -154,7 +149,6 @@ if (btnTopSaveLive) {
       }
 
       if (iframeDoc) {
-        // Collect text values from iframe DOM
         const updatedData = {
           heroTitle: iframeDoc.getElementById('heroTitle') ? iframeDoc.getElementById('heroTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
           heroSubtitle: iframeDoc.getElementById('heroSubtitle') ? iframeDoc.getElementById('heroSubtitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
@@ -172,31 +166,31 @@ if (btnTopSaveLive) {
         await setDoc(doc(db, 'site_content', 'landing'), updatedData, { merge: true });
       }
 
-      btnTopSaveLive.innerHTML = '<i class="fa-solid fa-check"></i> <span>¡GUARDADO EN FIRESTORE!</span>';
-      showToast('¡Todos los cambios visuales guardados exitosamente!');
+      if (saveLabel) saveLabel.textContent = '¡Guardado!';
+      showToast('¡Cambios guardados con éxito!');
 
       setTimeout(() => {
         btnTopSaveLive.disabled = false;
-        btnTopSaveLive.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span>GUARDAR CAMBIOS</span>';
-      }, 3500);
+        if (saveLabel) saveLabel.textContent = originalText;
+      }, 3000);
 
     } catch (err) {
-      console.error('Error guardando desde barra superior:', err);
-      showToast('Error al guardar cambios: ' + err.message);
+      console.error('Error al guardar cambios:', err);
+      showToast('No se pudo guardar los cambios.');
       btnTopSaveLive.disabled = false;
-      btnTopSaveLive.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span>GUARDAR CAMBIOS</span>';
+      if (saveLabel) saveLabel.textContent = originalText;
     }
   });
 }
 
-// Subscribe to Consultas Firestore Collection
+// Consultas Realtime Subscription
 function subscribeConsultasList() {
   const consultasRef = collection(db, 'consultas');
   onSnapshot(consultasRef, (snapshot) => {
     if (topConsultasBadge) topConsultasBadge.textContent = snapshot.size;
 
     if (snapshot.empty && adminConsultasList) {
-      adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 2rem;">No se han recibido consultas de clientes aún.</div>';
+      adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 2rem;">No se han recibido consultas aún.</div>';
       return;
     }
 
@@ -246,16 +240,16 @@ window.deleteConsultaDoc = async (docId) => {
     await deleteDoc(doc(db, 'consultas', docId));
     showToast('Consulta eliminada');
   } catch (err) {
-    showToast('Error al borrar consulta: ' + err.message);
+    showToast('Error al borrar: ' + err.message);
   }
 };
 
-// Toast Notification Helper
+// Toast Helper
 function showToast(msg) {
   if (!toastNotification) return;
   toastNotification.textContent = msg;
   toastNotification.classList.add('active');
   setTimeout(() => {
     toastNotification.classList.remove('active');
-  }, 4000);
+  }, 3500);
 }

@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Edición Visual en Vivo | El Arabe Arquitecto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin CMS | El Arabe Arquitecto</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
@@ -11,30 +11,27 @@
 </head>
 <body class="admin-body">
 
-  <!-- TOP ADMIN BAR (VISIBLE WHEN LOGGED IN) -->
+  <!-- MINIMAL MOBILE-FRIENDLY TOP ADMIN BAR -->
   <header class="admin-top-bar" id="adminTopBar" style="display: none;">
     <div class="top-bar-brand">
-      <img src="assets/logo2.png" alt="El Arabe Arquitecto" class="admin-bar-logo">
-      <span class="admin-mode-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> MODO EDICIÓN</span>
+      <img src="assets/logo2.png" alt="El Arabe" class="admin-bar-logo">
     </div>
 
-    <!-- CENTER TABS -->
     <div class="top-bar-tabs">
-      <button class="top-tab-btn active" id="tabBtnVisualEditor" data-target="viewVisualEditor">
-        <i class="fa-solid fa-pen-to-square"></i> EDICIÓN VISUAL (WEB)
+      <button class="top-tab-btn active" id="tabBtnVisualEditor">
+        <i class="fa-solid fa-pen-to-square"></i> <span class="tab-label">Web</span>
       </button>
-      <button class="top-tab-btn" id="tabBtnConsultas" data-target="viewConsultas">
-        <i class="fa-solid fa-inbox"></i> CONSULTAS RECIBIDAS <span id="topConsultasBadge" class="badge-count">0</span>
+      <button class="top-tab-btn" id="tabBtnConsultas">
+        <i class="fa-solid fa-inbox"></i> <span class="tab-label">Consultas</span> <span id="topConsultasBadge" class="badge-count">0</span>
       </button>
     </div>
 
-    <!-- RIGHT ACTION BUTTONS -->
     <div class="top-bar-actions">
-      <button id="btnTopSaveLive" class="btn-top-save">
-        <i class="fa-solid fa-floppy-disk"></i> <span>GUARDAR CAMBIOS</span>
+      <button id="btnTopSaveLive" class="btn-top-save" title="Guardar Cambios">
+        <i class="fa-solid fa-floppy-disk"></i> <span class="save-label">Guardar</span>
       </button>
-      <button id="btnTopLogout" class="btn-top-logout">
-        <i class="fa-solid fa-right-from-bracket"></i> <span>CERRAR SESIÓN</span>
+      <button id="btnTopLogout" class="btn-top-logout" title="Cerrar Sesión">
+        <i class="fa-solid fa-right-from-bracket"></i>
       </button>
     </div>
   </header>
@@ -45,12 +42,12 @@
   <!-- MAIN ADMIN VIEWS -->
   <main class="admin-main-wrapper">
     
-    <!-- 1. LOGIN VIEW (PROTECTED ROUTE) -->
+    <!-- 1. LOGIN VIEW -->
     <div id="loginView" class="login-card">
       <div class="login-header">
         <i class="fa-solid fa-lock login-icon"></i>
-        <h2>Acceso al Panel de Edición</h2>
-        <p>Inicia sesión con tus credenciales de Administrador</p>
+        <h2>Acceso Administración</h2>
+        <p>Inicia sesión con tu cuenta de Administrador</p>
       </div>
 
       <form id="loginForm" class="login-form">
@@ -73,7 +70,7 @@
       </form>
 
       <div class="login-footer-info">
-        <small><i class="fa-solid fa-shield-halved"></i> Panel seguro de administración CMS.</small>
+        <small><i class="fa-solid fa-shield-halved"></i> Sistema CMS El Arabe Arquitecto.</small>
       </div>
     </div>
 
@@ -84,17 +81,17 @@
 
     <!-- 3. CONSULTAS RECIBIDAS VIEW -->
     <div id="viewConsultas" class="admin-view-panel" style="display: none;">
-      <div class="container" style="padding-top: 2rem;">
+      <div class="container" style="padding-top: 1.5rem;">
         <div class="panel-card">
           <div class="panel-header">
             <div>
-              <h3><i class="fa-solid fa-envelope-open-text" style="color: #d4af37;"></i> Mensajes y Consultas Recibidas</h3>
-              <p>Revisa las solicitudes de cotización y regularización enviadas desde el sitio web.</p>
+              <h3><i class="fa-solid fa-envelope-open-text" style="color: #d4af37;"></i> Consultas Recibidas</h3>
+              <p>Mensajes enviados por los clientes desde el formulario de contacto.</p>
             </div>
           </div>
 
           <div id="adminConsultasList" class="consultas-table-wrapper">
-            <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando consultas de Firestore...</div>
+            <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando consultas...</div>
           </div>
         </div>
       </div>
