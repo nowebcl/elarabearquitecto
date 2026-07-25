@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel CMS | El Arabe Arquitecto</title>
+  <title>Panel de Edición Visual en Vivo | El Arabe Arquitecto</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
@@ -11,34 +11,46 @@
 </head>
 <body class="admin-body">
 
-  <!-- Header Admin -->
-  <header class="admin-header">
-    <div class="admin-container admin-nav">
-      <div class="admin-brand">
-        <img src="assets/logo2.png" alt="El Arabe Arquitecto" class="admin-logo-img">
-        <span class="admin-title-tag">PANEL CMS ADMINISTRACIÓN</span>
-      </div>
+  <!-- TOP ADMIN BAR (VISIBLE WHEN LOGGED IN) -->
+  <header class="admin-top-bar" id="adminTopBar" style="display: none;">
+    <div class="top-bar-brand">
+      <img src="assets/logo2.png" alt="El Arabe Arquitecto" class="admin-bar-logo">
+      <span class="admin-mode-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> MODO EDICIÓN</span>
+    </div>
 
-      <div class="admin-user-info" id="adminUserInfo" style="display: none;">
-        <button id="btnToggleSplitPreview" class="btn-primary-admin" style="background: rgba(212,175,55,0.15); color: #d4af37; border: 1px solid rgba(212,175,55,0.4); font-size: 0.78rem;">
-          <i class="fa-solid fa-table-columns"></i> <span id="splitPreviewText">Vista Previa Live Elementor</span>
-        </button>
-        <span id="userEmailBadge" class="user-badge"></span>
-        <button id="btnLogout" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button>
-      </div>
+    <!-- CENTER TABS -->
+    <div class="top-bar-tabs">
+      <button class="top-tab-btn active" id="tabBtnVisualEditor" data-target="viewVisualEditor">
+        <i class="fa-solid fa-pen-to-square"></i> EDICIÓN VISUAL (WEB)
+      </button>
+      <button class="top-tab-btn" id="tabBtnConsultas" data-target="viewConsultas">
+        <i class="fa-solid fa-inbox"></i> CONSULTAS RECIBIDAS <span id="topConsultasBadge" class="badge-count">0</span>
+      </button>
+    </div>
+
+    <!-- RIGHT ACTION BUTTONS -->
+    <div class="top-bar-actions">
+      <button id="btnTopSaveLive" class="btn-top-save">
+        <i class="fa-solid fa-floppy-disk"></i> <span>GUARDAR CAMBIOS</span>
+      </button>
+      <button id="btnTopLogout" class="btn-top-logout">
+        <i class="fa-solid fa-right-from-bracket"></i> <span>CERRAR SESIÓN</span>
+      </button>
     </div>
   </header>
 
-  <!-- Notification Toast -->
+  <!-- TOAST NOTIFICATION -->
   <div id="toastNotification" class="toast-notification"></div>
 
-  <!-- SECTION 1: LOGIN VIEW (PROTECTED ROUTE GUARD) -->
-  <main class="admin-main">
+  <!-- MAIN ADMIN VIEWS -->
+  <main class="admin-main-wrapper">
+    
+    <!-- 1. LOGIN VIEW (PROTECTED ROUTE) -->
     <div id="loginView" class="login-card">
       <div class="login-header">
         <i class="fa-solid fa-lock login-icon"></i>
-        <h2>Acceso Administrativo</h2>
-        <p>Inicia sesión con tus credenciales de administrador de Firebase</p>
+        <h2>Acceso al Panel de Edición</h2>
+        <p>Inicia sesión con tus credenciales de Administrador</p>
       </div>
 
       <form id="loginForm" class="login-form">
@@ -61,183 +73,23 @@
       </form>
 
       <div class="login-footer-info">
-        <small><i class="fa-solid fa-shield-halved"></i> Acceso restringido. Solo administradores autorizados.</small>
+        <small><i class="fa-solid fa-shield-halved"></i> Panel seguro de administración CMS.</small>
       </div>
     </div>
 
-    <!-- SECTION 2: DASHBOARD CMS VIEW (AUTHENTICATED) -->
-    <div id="dashboardView" class="dashboard-container" style="display: none;">
-      
-      <!-- Dashboard Tabs Navigation -->
-      <nav class="dashboard-tabs">
-        <button class="tab-btn active" data-tab="tabContent">
-          <i class="fa-solid fa-pen-to-square"></i> Edición de Textos
-        </button>
-        <button class="tab-btn" data-tab="tabGallery">
-          <i class="fa-solid fa-images"></i> Gestor de Galería
-        </button>
-        <button class="tab-btn" data-tab="tabConsultas">
-          <i class="fa-solid fa-inbox"></i> Consultas Recibidas <span id="consultasCountBadge" class="count-badge">0</span>
-        </button>
-      </nav>
+    <!-- 2. LIVE VISUAL EDITOR VIEW (IFRAME OF LANDING PAGE) -->
+    <div id="viewVisualEditor" class="admin-view-panel active" style="display: none;">
+      <iframe src="index.html" id="visualEditorIframe" class="visual-editor-iframe"></iframe>
+    </div>
 
-      <!-- TAB 1: TEXT EDITOR -->
-      <section id="tabContent" class="tab-content active">
+    <!-- 3. CONSULTAS RECIBIDAS VIEW -->
+    <div id="viewConsultas" class="admin-view-panel" style="display: none;">
+      <div class="container" style="padding-top: 2rem;">
         <div class="panel-card">
           <div class="panel-header">
             <div>
-              <h3><i class="fa-solid fa-sliders"></i> Textos y Contenido de la Landing Page</h3>
-              <p>Edita los textos principales. Los cambios se actualizarán en tiempo real en el sitio.</p>
-            </div>
-            <button id="btnSaveContent" class="btn-success-admin">
-              <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
-            </button>
-          </div>
-
-          <form id="contentForm" class="panel-form-grid">
-            <!-- HERO SECTION -->
-            <div class="form-section-block">
-              <h4 class="section-block-title"><i class="fa-solid fa-heading"></i> Sección Inicio (Hero)</h4>
-              
-              <div class="admin-form-group">
-                <label for="inputHeroTitle">Título Principal (Hero)</label>
-                <textarea id="inputHeroTitle" rows="2" placeholder="REGULARIZAMOS LO QUE CONSTRUISTE."></textarea>
-              </div>
-
-              <div class="admin-form-group">
-                <label for="inputHeroSubtitle">Subtítulo (Hero)</label>
-                <textarea id="inputHeroSubtitle" rows="2" placeholder="Arquitectura. Regularización. Diseño Desde Cero."></textarea>
-              </div>
-
-              <div class="admin-form-group">
-                <label for="inputHeroLocation">Ubicación / Cobertura</label>
-                <input type="text" id="inputHeroLocation" placeholder="Puerto Montt - Puerto Varas - Región de Los Lagos">
-              </div>
-            </div>
-
-            <!-- INTRO SECTION -->
-            <div class="form-section-block">
-              <h4 class="section-block-title"><i class="fa-solid fa-bullhorn"></i> Propuesta de Valor (Intro)</h4>
-              
-              <div class="admin-form-group">
-                <label for="inputIntroHeading">Epígrafe Superior</label>
-                <input type="text" id="inputIntroHeading" placeholder="No solo hacemos planos.">
-              </div>
-
-              <div class="admin-form-group">
-                <label for="inputIntroTitle">Título de Propuesta de Valor</label>
-                <textarea id="inputIntroTitle" rows="3" placeholder="Transformamos construcciones irregulares en proyectos normados, aprobados y listos para vender o ampliar."></textarea>
-              </div>
-            </div>
-
-            <!-- SOBRE NOSOTROS SECTION -->
-            <div class="form-section-block">
-              <h4 class="section-block-title"><i class="fa-solid fa-user-group"></i> Sobre Nosotros</h4>
-              
-              <div class="admin-form-group">
-                <label for="inputAboutTitle">Título Sobre Nosotros</label>
-                <input type="text" id="inputAboutTitle" placeholder="La arquitectura no termina con un plano.">
-              </div>
-
-              <div class="admin-form-group">
-                <label for="inputAboutP1">Primer Párrafo</label>
-                <textarea id="inputAboutP1" rows="2" placeholder="Comienza cuando puedes vivir, construir o vender con tranquilidad."></textarea>
-              </div>
-
-              <div class="admin-form-group">
-                <label for="inputAboutP2">Segundo Párrafo</label>
-                <textarea id="inputAboutP2" rows="3" placeholder="En nuestra oficina de arquitectura acompañamos a nuestros clientes desde la primera idea hasta la aprobación municipal..."></textarea>
-              </div>
-            </div>
-
-            <!-- CALL TO ACTION SECTION -->
-            <div class="form-section-block">
-              <h4 class="section-block-title"><i class="fa-solid fa-comment-dots"></i> Llamada a la Acción (CTA)</h4>
-              
-              <div class="admin-form-group">
-                <label for="inputCtaTitle">Título de la Sección CTA</label>
-                <textarea id="inputCtaTitle" rows="2" placeholder="TU PROYECTO MERECE HACERSE BIEN DESDE EL PRINCIPIO."></textarea>
-              </div>
-
-              <div class="admin-form-group">
-                <label for="inputCtaDesc">Descripción del Formulario</label>
-                <input type="text" id="inputCtaDesc" placeholder="Envíanos los detalles de tu propiedad y te evaluamos el proyecto sin compromiso.">
-              </div>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <!-- TAB 2: GALLERY MANAGER (STORAGE + FIRESTORE) -->
-      <section id="tabGallery" class="tab-content">
-        <div class="panel-card">
-          <div class="panel-header">
-            <div>
-              <h3><i class="fa-solid fa-cloud-arrow-up"></i> Subir Nueva Imagen a la Galería</h3>
-              <p>Sube imágenes a Firebase Storage y agrégalas al portafolio dinámico.</p>
-            </div>
-          </div>
-
-          <form id="uploadGalleryForm" class="upload-gallery-box">
-            <div class="admin-form-row">
-              <div class="admin-form-group">
-                <label for="galleryFileInput">Seleccionar Imagen (JPG, PNG, WEBP)</label>
-                <input type="file" id="galleryFileInput" accept="image/*" required>
-              </div>
-
-              <div class="admin-form-group">
-                <label for="galleryTitleInput">Título del Proyecto</label>
-                <input type="text" id="galleryTitleInput" placeholder="Ej: Casa Residencial Los Lagos" required>
-              </div>
-
-              <div class="admin-form-group">
-                <label for="galleryCategoryInput">Categoría</label>
-                <select id="galleryCategoryInput" required>
-                  <option value="residencial">Residencial</option>
-                  <option value="diseno">Diseño</option>
-                  <option value="regularizacion">Regularización</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="admin-form-group">
-              <label for="galleryDescInput">Descripción Corta</label>
-              <input type="text" id="galleryDescInput" placeholder="Ej: Anteproyecto y regularización de ampliación habitacional.">
-            </div>
-
-            <div class="upload-progress-container" id="uploadProgressBox" style="display: none;">
-              <div class="progress-bar-fill" id="uploadProgressBar"></div>
-              <span id="uploadProgressText">0%</span>
-            </div>
-
-            <button type="submit" id="btnUploadGallery" class="btn-primary-admin" style="margin-top: 1rem;">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Subir e Integrar a la Galería
-            </button>
-          </form>
-        </div>
-
-        <!-- CURRENT GALLERY LIST -->
-        <div class="panel-card" style="margin-top: 2rem;">
-          <div class="panel-header">
-            <div>
-              <h3><i class="fa-solid fa-layer-group"></i> Imágenes en la Galería</h3>
-              <p>Gestiona y elimina imágenes almacenadas en Firebase Storage y Firestore.</p>
-            </div>
-          </div>
-
-          <div id="adminGalleryList" class="admin-gallery-grid">
-            <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando imágenes de la galería...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: CONSULTAS MANAGEMENT -->
-      <section id="tabConsultas" class="tab-content">
-        <div class="panel-card">
-          <div class="panel-header">
-            <div>
-              <h3><i class="fa-solid fa-envelope-open-text"></i> Mensajes y Consultas Recibidas</h3>
-              <p>Revisa las solicitudes enviadas por los clientes a través del formulario dinámico.</p>
+              <h3><i class="fa-solid fa-envelope-open-text" style="color: #d4af37;"></i> Mensajes y Consultas Recibidas</h3>
+              <p>Revisa las solicitudes de cotización y regularización enviadas desde el sitio web.</p>
             </div>
           </div>
 
@@ -245,24 +97,12 @@
             <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando consultas de Firestore...</div>
           </div>
         </div>
-      </section>
-
-    </div>
-
-    <!-- LIVE PREVIEW WRAPPER FOR SPLIT ELEMENTOR VIEW -->
-    <div id="livePreviewWrapper" class="live-preview-wrapper" style="display: none;">
-      <div class="live-preview-header">
-        <span><i class="fa-solid fa-desktop"></i> VISTA PREVIA EN VIVO DE LA WEB</span>
-        <a href="index.html" target="_blank" style="color: #d4af37; text-decoration: none; font-size: 0.78rem;">
-          Abrir en pestaña nueva <i class="fa-solid fa-arrow-up-right-from-square"></i>
-        </a>
       </div>
-      <iframe src="index.html" id="livePreviewIframe" class="live-preview-iframe"></iframe>
     </div>
+
   </main>
 
-  <!-- FIREBASE SDK & ADMIN CMS SCRIPT -->
+  <!-- FIREBASE SDK & ADMIN SCRIPT -->
   <script type="module" src="admin.js"></script>
-
 </body>
 </html>
