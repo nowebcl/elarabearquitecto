@@ -127,6 +127,13 @@
           <h2 class="projects-title">GALERÍA DE PROYECTOS</h2>
         </div>
         
+        <!-- Admin Add Gallery Image Button (Visible in Admin Mode) -->
+        <div id="adminGalleryHeaderBtn" style="display: none; margin-bottom: 0.5rem;">
+          <button id="btnOpenVisualAddImage" class="btn-primary-admin" style="background: #d4af37; color: #111; font-weight: 700; border-radius: 20px; padding: 0.55rem 1.25rem; font-size: 0.78rem; border: none; cursor: pointer;">
+            <i class="fa-solid fa-plus"></i> <span>AGREGAR IMAGEN A LA GALERÍA</span>
+          </button>
+        </div>
+
         <!-- Gallery Filter Buttons -->
         <div class="gallery-filters">
           <button class="filter-btn active" data-filter="all">Todos</button>
@@ -421,6 +428,47 @@
     </div>
   </footer>
 
+  <!-- Modal para Agregar Imagen a la Galería Directamente desde la Landing Page -->
+  <div id="visualGalleryModal" class="lightbox-modal" style="display: none; align-items: center; justify-content: center;">
+    <div class="lightbox-backdrop" id="visualGalleryModalBackdrop"></div>
+    <div class="panel-card" style="position: relative; z-index: 1001; max-width: 500px; width: 90%; background: #141517; border: 1px solid #d4af37; border-radius: 12px; padding: 2rem;">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0; color: #fff; font-size: 1.15rem;"><i class="fa-solid fa-cloud-arrow-up" style="color: #d4af37;"></i> Agregar Imagen a la Galería</h3>
+        <button id="btnCloseVisualGalleryModal" style="background: none; border: none; color: #aaa; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <form id="visualGalleryForm">
+        <div class="admin-form-group" style="margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="color: #aaa; font-size: 0.75rem; text-transform: uppercase;">Seleccionar Imagen</label>
+          <input type="file" id="vGalleryFile" accept="image/*" required style="width: 100%; padding: 0.6rem; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px;">
+        </div>
+
+        <div class="admin-form-group" style="margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="color: #aaa; font-size: 0.75rem; text-transform: uppercase;">Título del Proyecto</label>
+          <input type="text" id="vGalleryTitle" placeholder="Ej: Proyecto Casa Puerto Varas" required style="width: 100%; padding: 0.65rem; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px;">
+        </div>
+
+        <div class="admin-form-group" style="margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="color: #aaa; font-size: 0.75rem; text-transform: uppercase;">Categoría</label>
+          <select id="vGalleryCategory" required style="width: 100%; padding: 0.65rem; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px;">
+            <option value="residencial">Residencial</option>
+            <option value="diseno">Diseño</option>
+            <option value="regularizacion">Regularización</option>
+          </select>
+        </div>
+
+        <div class="admin-form-group" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="color: #aaa; font-size: 0.75rem; text-transform: uppercase;">Descripción Corta</label>
+          <input type="text" id="vGalleryDesc" placeholder="Ej: Diseño y regularización de vivienda unifamiliar." style="width: 100%; padding: 0.65rem; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px;">
+        </div>
+
+        <button type="submit" id="btnSubmitVGallery" class="btn-primary-admin" style="width: 100%; background: #d4af37; color: #111; font-weight: 700; padding: 0.8rem; border-radius: 6px; border: none; cursor: pointer;">
+          <i class="fa-solid fa-cloud-arrow-up"></i> SUBIR E INSERTAR EN LA GALERÍA
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Firebase SDK & Firestore Integration -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -432,11 +480,19 @@
       getDoc, 
       doc, 
       setDoc, 
+      deleteDoc,
       onSnapshot, 
       serverTimestamp, 
       query, 
       orderBy 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { 
+      getStorage, 
+      ref, 
+      uploadBytesResumable, 
+      getDownloadURL, 
+      deleteObject 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBhRM0PFeKfBQetEa40diX7ExbTaxeDkMc",
@@ -450,19 +506,26 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const storage = getStorage(app);
 
     window.db = db;
     window.auth = auth;
+    window.storage = storage;
     window.onAuthStateChanged = onAuthStateChanged;
     window.addDoc = addDoc;
     window.getDoc = getDoc;
     window.doc = doc;
     window.setDoc = setDoc;
+    window.deleteDoc = deleteDoc;
     window.onSnapshot = onSnapshot;
     window.collection = collection;
     window.serverTimestamp = serverTimestamp;
     window.query = query;
     window.orderBy = orderBy;
+    window.ref = ref;
+    window.uploadBytesResumable = uploadBytesResumable;
+    window.getDownloadURL = getDownloadURL;
+    window.deleteObject = deleteObject;
   </script>
 
   <script src="app.js"></script>

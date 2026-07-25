@@ -342,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnToggleInlineEdit = document.getElementById('btnToggleInlineEdit');
     const btnSaveInlineVisual = document.getElementById('btnSaveInlineVisual');
     const toggleEditText = document.getElementById('toggleEditText');
+    const adminGalleryHeaderBtn = document.getElementById('adminGalleryHeaderBtn');
 
     const editableIds = [
       'heroTitle', 'heroSubtitle', 'heroLocation',
@@ -349,47 +350,42 @@ document.addEventListener('DOMContentLoaded', () => {
       'aboutP1', 'aboutP2', 'ctaTitle', 'ctaDesc'
     ];
 
-    let isEditingActive = false;
-
     window.onAuthStateChanged(window.auth, (user) => {
-      if (user && visualEditorBar) {
-        visualEditorBar.style.display = 'flex';
+      if (user) {
+        window.isAdminLoggedIn = true;
+        if (visualEditorBar) visualEditorBar.style.display = 'flex';
+        if (adminGalleryHeaderBtn) adminGalleryHeaderBtn.style.display = 'block';
+        if (btnSaveInlineVisual) btnSaveInlineVisual.style.display = 'flex';
         document.body.classList.add('editor-mode-active');
-      } else if (visualEditorBar) {
-        visualEditorBar.style.display = 'none';
-        document.body.classList.remove('editor-mode-active');
-      }
-    });
 
-    if (btnToggleInlineEdit) {
-      btnToggleInlineEdit.addEventListener('click', () => {
-        isEditingActive = !isEditingActive;
+        // Automatically make text blocks editable on hover/focus when logged in
+        editableIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.contentEditable = 'true';
+            el.classList.add('editable-active');
+          }
+        });
+
+        // Trigger gallery re-render to show admin card controls
+        if (typeof initDynamicGallerySync === 'function') initDynamicGallerySync();
+
+      } else {
+        window.isAdminLoggedIn = false;
+        if (visualEditorBar) visualEditorBar.style.display = 'none';
+        if (adminGalleryHeaderBtn) adminGalleryHeaderBtn.style.display = 'none';
+        if (btnSaveInlineVisual) btnSaveInlineVisual.style.display = 'none';
+        document.body.classList.remove('editor-mode-active');
 
         editableIds.forEach(id => {
           const el = document.getElementById(id);
           if (el) {
-            el.contentEditable = isEditingActive ? 'true' : 'false';
-            if (isEditingActive) {
-              el.classList.add('editable-active');
-            } else {
-              el.classList.remove('editable-active');
-            }
+            el.contentEditable = 'false';
+            el.classList.remove('editable-active');
           }
         });
-
-        if (isEditingActive) {
-          if (toggleEditText) toggleEditText.textContent = 'Desactivar Edición Directa';
-          if (btnSaveInlineVisual) btnSaveInlineVisual.style.display = 'flex';
-          btnToggleInlineEdit.style.background = 'rgba(212, 175, 55, 0.25)';
-          btnToggleInlineEdit.style.borderColor = '#d4af37';
-        } else {
-          if (toggleEditText) toggleEditText.textContent = 'Editar Textos Directamente';
-          if (btnSaveInlineVisual) btnSaveInlineVisual.style.display = 'none';
-          btnToggleInlineEdit.style.background = '';
-          btnToggleInlineEdit.style.borderColor = '';
-        }
-      });
-    }
+      }
+    });
 
     if (btnSaveInlineVisual) {
       btnSaveInlineVisual.addEventListener('click', async () => {
@@ -415,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await window.setDoc(window.doc(window.db, 'site_content', 'landing'), updatedData, { merge: true });
           }
 
-          btnSaveInlineVisual.innerHTML = '<i class="fa-solid fa-check"></i> <span>¡PUBLICADO EN FIRESTORE!</span>';
+          btnSaveInlineVisual.innerHTML = '<i class="fa-solid fa-check"></i> <span>¡TEXTOS PUBLICADOS!</span>';
           btnSaveInlineVisual.style.background = '#25D366';
 
           setTimeout(() => {
@@ -431,7 +427,134 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
+
+    // Modal Logic for Adding Gallery Image Directly from Landing Page
+    const btnOpenVisualAddImage = document.getElementById('btnOpenVisualAddImage');
+    const visualGalleryModal = document.getElementById('visualGalleryModal');
+    const btnCloseVisualGalleryModal = document.getElementById('btnCloseVisualGalleryModal');
+    const visualGalleryForm = document.getElementById('visualGalleryForm');
+
+    if (btnOpenVisualAddImage && visualGalleryModal) {
+      btnOpenVisualAddImage.addEventListener('click', () => {
+        visualGalleryModal.style.display = 'flex';
+      });
+    }
+
+    if (btnCloseVisualGalleryModal && visualGalleryModal) {
+      btnCloseVisualGalleryModal.addEventListener('click', () => {
+        visualGalleryModal.style.display = 'none';
+      });
+    }
+
+    if (visualGalleryForm) {
+      visualGalleryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('vGalleryFile').files[0];
+        const title = document.getElementById('vGalleryTitle').value.trim();
+        const category = document.getElementById('vGalleryCategory').value;
+        const desc = document.getElementById('vGalleryDesc').value.trim();
+        const btnSubmit = document.getElementById('btnSubmitVGallery');
+
+        if (!file) return;
+
+        const categoryLabels = {
+          residencial: 'Residencial',
+          diseno: 'Diseño',
+          regularizacion: 'Regularización'
+        };
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SUBIENDO A STORAGE...';
+
+        try {
+          const storagePath = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+          const storageRef = window.ref(window.storage, storagePath);
+          const uploadTask = window.uploadBytesResumable(storageRef, file);
+
+          uploadTask.on('state_changed', null, (err) => console.error(err), async () => {
+            const downloadURL = await window.getDownloadURL(uploadTask.snapshot.ref);
+
+            await window.addDoc(window.collection(window.db, 'gallery'), {
+              title,
+              category,
+              categoryLabel: categoryLabels[category] || category,
+              desc,
+              url: downloadURL,
+              storagePath,
+              timestamp: new Date().toISOString()
+            });
+
+            btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> ¡IMAGEN AGREGADA!';
+            btnSubmit.style.background = '#25D366';
+
+            setTimeout(() => {
+              visualGalleryForm.reset();
+              btnSubmit.disabled = false;
+              btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> SUBIR E INSERTAR EN LA GALERÍA';
+              btnSubmit.style.background = '';
+              visualGalleryModal.style.display = 'none';
+            }, 1500);
+          });
+
+        } catch (err) {
+          console.error('Error subiendo imagen desde modal:', err);
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = 'ERROR AL SUBIR';
+        }
+      });
+    }
   }
+
+  // Global functions for direct card actions on landing page
+  window.replaceGalleryCardImage = (docId, oldStoragePath) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const newStoragePath = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const storageRef = window.ref(window.storage, newStoragePath);
+      
+      try {
+        const uploadTask = window.uploadBytesResumable(storageRef, file);
+        uploadTask.on('state_changed', null, null, async () => {
+          const downloadURL = await window.getDownloadURL(uploadTask.snapshot.ref);
+
+          // Update Firestore doc
+          await window.setDoc(window.doc(window.db, 'gallery', docId), {
+            url: downloadURL,
+            storagePath: newStoragePath,
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+
+          // Clean old storage file
+          if (oldStoragePath) {
+            const oldRef = window.ref(window.storage, oldStoragePath);
+            window.deleteObject(oldRef).catch(err => console.warn(err));
+          }
+        });
+      } catch (err) {
+        console.error('Error reemplazando imagen:', err);
+      }
+    };
+    input.click();
+  };
+
+  window.deleteGalleryCardImage = async (docId, storagePath) => {
+    if (!confirm('¿Borrar esta imagen de la galería?')) return;
+
+    try {
+      await window.deleteDoc(window.doc(window.db, 'gallery', docId));
+      if (storagePath) {
+        const fileRef = window.ref(window.storage, storagePath);
+        window.deleteObject(fileRef).catch(err => console.warn(err));
+      }
+    } catch (err) {
+      console.error('Error al borrar card:', err);
+    }
+  };
 
   initVisualEditorMode();
   
