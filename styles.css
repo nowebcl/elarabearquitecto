@@ -1449,3 +1449,70 @@ body.editor-mode-active {
   padding-top: 52px;
 }
 
+/* Floating Admin Bar on Landing Page */
+.landing-admin-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 46px;
+  background: rgba(14, 14, 14, 0.98);
+  border-bottom: 2px solid #d4af37;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+  backdrop-filter: blur(10px);
+}
+
+.landing-admin-bar .admin-bar-tag {
+  color: #d4af37;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  letter-spacing: 0.05em;
+}
+
+.landing-admin-bar .admin-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.landing-admin-bar .btn-admin-bar {
+  padding: 0.35rem 0.85rem;
+  border-radius: 5px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.landing-admin-bar .btn-admin-save {
+  background: #25D366;
+  color: #ffffff;
+}
+
+.landing-admin-bar .btn-admin-save:hover {
+  background: #20ba59;
+}
+
+.landing-admin-bar .btn-admin-logout {
+  background: rgba(220, 39, 67, 0.2);
+  color: #ff4d6d;
+  border: 1px solid rgba(220, 39, 67, 0.4);
+}
+
+.landing-admin-bar .btn-admin-logout:hover {
+  background: #dc2743;
+  color: #ffffff;
+}
+

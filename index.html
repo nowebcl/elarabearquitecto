@@ -10,6 +10,21 @@
 </head>
 <body>
 
+  <!-- Floating Admin Bar on Landing Page when Admin is Logged In -->
+  <div id="landingAdminBar" class="landing-admin-bar" style="display: none;">
+    <div class="admin-bar-tag">
+      <i class="fa-solid fa-user-shield"></i> <span>MODO ADMINISTRADOR</span>
+    </div>
+    <div class="admin-bar-actions">
+      <button id="btnLandingSave" class="btn-admin-bar btn-admin-save">
+        <i class="fa-solid fa-floppy-disk"></i> <span>GUARDAR CAMBIOS</span>
+      </button>
+      <button id="btnLandingLogout" class="btn-admin-bar btn-admin-logout">
+        <i class="fa-solid fa-right-from-bracket"></i> <span>SALIR DE EDICIÓN</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Navigation -->
   <nav class="navbar">
     <div class="container nav-container">
