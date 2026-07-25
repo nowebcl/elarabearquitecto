@@ -428,7 +428,30 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Modal Logic for Adding Gallery Image Directly from Landing Page
+  // Global Save Function called by Admin Panel Top Bar
+  window.saveVisualEdits = async () => {
+    const updatedData = {
+      heroTitle: document.getElementById('heroTitle') ? document.getElementById('heroTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+      heroSubtitle: document.getElementById('heroSubtitle') ? document.getElementById('heroSubtitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+      heroLocation: document.getElementById('heroLocation') ? document.getElementById('heroLocation').textContent.trim() : '',
+      introHeading: document.getElementById('introHeading') ? document.getElementById('introHeading').textContent.trim() : '',
+      introTitle: document.getElementById('introTitle') ? document.getElementById('introTitle').textContent.trim() : '',
+      aboutTitle: document.getElementById('aboutTitle') ? document.getElementById('aboutTitle').textContent.trim() : '',
+      aboutP1: document.getElementById('aboutP1') ? document.getElementById('aboutP1').textContent.trim() : '',
+      aboutP2: document.getElementById('aboutP2') ? document.getElementById('aboutP2').textContent.trim() : '',
+      ctaTitle: document.getElementById('ctaTitle') ? document.getElementById('ctaTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+      ctaDesc: document.getElementById('ctaDesc') ? document.getElementById('ctaDesc').textContent.trim() : '',
+      updatedAt: new Date().toISOString()
+    };
+
+    if (window.db && window.doc && window.setDoc) {
+      await window.setDoc(window.doc(window.db, 'site_content', 'landing'), updatedData, { merge: true });
+      return true;
+    }
+    return false;
+  };
+
+  // Modal Logic for Adding Gallery Image Directly from Landing Page
     const btnOpenVisualAddImage = document.getElementById('btnOpenVisualAddImage');
     const visualGalleryModal = document.getElementById('visualGalleryModal');
     const btnCloseVisualGalleryModal = document.getElementById('btnCloseVisualGalleryModal');

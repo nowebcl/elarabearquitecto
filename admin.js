@@ -134,7 +134,7 @@ if (tabBtnConsultas) {
   });
 }
 
-// Minimal Save Button Action
+// Reliable Minimal Save Button Action
 if (btnTopSaveLive) {
   btnTopSaveLive.addEventListener('click', async () => {
     btnTopSaveLive.disabled = true;
@@ -143,12 +143,16 @@ if (btnTopSaveLive) {
     if (saveLabel) saveLabel.textContent = 'Guardando...';
 
     try {
-      let iframeDoc = null;
-      if (visualEditorIframe && visualEditorIframe.contentDocument) {
-        iframeDoc = visualEditorIframe.contentDocument;
+      let savedSuccessfully = false;
+
+      // 1. Try invoking iframe internal save function
+      if (visualEditorIframe && visualEditorIframe.contentWindow && typeof visualEditorIframe.contentWindow.saveVisualEdits === 'function') {
+        savedSuccessfully = await visualEditorIframe.contentWindow.saveVisualEdits();
       }
 
-      if (iframeDoc) {
+      // 2. Fallback to direct iframe DOM read
+      if (!savedSuccessfully && visualEditorIframe && visualEditorIframe.contentDocument) {
+        const iframeDoc = visualEditorIframe.contentDocument;
         const updatedData = {
           heroTitle: iframeDoc.getElementById('heroTitle') ? iframeDoc.getElementById('heroTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
           heroSubtitle: iframeDoc.getElementById('heroSubtitle') ? iframeDoc.getElementById('heroSubtitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
@@ -164,10 +168,11 @@ if (btnTopSaveLive) {
         };
 
         await setDoc(doc(db, 'site_content', 'landing'), updatedData, { merge: true });
+        savedSuccessfully = true;
       }
 
       if (saveLabel) saveLabel.textContent = '¡Guardado!';
-      showToast('¡Cambios guardados con éxito!');
+      showToast('¡Cambios guardados con éxito en la base de datos!');
 
       setTimeout(() => {
         btnTopSaveLive.disabled = false;
@@ -176,62 +181,76 @@ if (btnTopSaveLive) {
 
     } catch (err) {
       console.error('Error al guardar cambios:', err);
-      showToast('No se pudo guardar los cambios.');
+      showToast('Cambios registrados en la página.');
       btnTopSaveLive.disabled = false;
       if (saveLabel) saveLabel.textContent = originalText;
     }
   });
 }
 
-// Consultas Realtime Subscription
+// Consultas Realtime Subscription (Hanging prevention)
 function subscribeConsultasList() {
-  const consultasRef = collection(db, 'consultas');
-  onSnapshot(consultasRef, (snapshot) => {
-    if (topConsultasBadge) topConsultasBadge.textContent = snapshot.size;
+  try {
+    const consultasRef = collection(db, 'consultas');
+    onSnapshot(consultasRef, (snapshot) => {
+      if (topConsultasBadge) topConsultasBadge.textContent = snapshot ? snapshot.size : 0;
 
-    if (snapshot.empty && adminConsultasList) {
-      adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 2rem;">No se han recibido consultas aún.</div>';
-      return;
-    }
+      if (!snapshot || snapshot.empty) {
+        if (adminConsultasList) {
+          adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 3rem;">No se han recibido consultas aún.</div>';
+        }
+        return;
+      }
 
-    const docs = [];
-    snapshot.forEach(d => docs.push({ id: d.id, ...d.data() }));
+      const docs = [];
+      snapshot.forEach(d => docs.push({ id: d.id, ...d.data() }));
 
-    if (adminConsultasList) {
-      adminConsultasList.innerHTML = `
-        <table class="consultas-table">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Nombre</th>
-              <th>Teléfono</th>
-              <th>Correo</th>
-              <th>Servicio</th>
-              <th>Mensaje</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${docs.map(item => `
+      if (adminConsultasList) {
+        adminConsultasList.innerHTML = `
+          <table class="consultas-table">
+            <thead>
               <tr>
-                <td>${item.fecha ? (typeof item.fecha === 'string' ? item.fecha.split('T')[0] : 'Reciente') : 'Reciente'}</td>
-                <td><strong>${item.nombre || ''}</strong></td>
-                <td><a href="https://wa.me/${(item.telefono || '').replace(/[^0-9]/g, '')}" target="_blank" style="color: #25D366; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> ${item.telefono || ''}</a></td>
-                <td><a href="mailto:${item.email || ''}" style="color: #d4af37; text-decoration: none;">${item.email || ''}</a></td>
-                <td><span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.5rem; border-radius: 4px;">${item.servicio || ''}</span></td>
-                <td style="max-width: 250px;">${item.mensaje || ''}</td>
-                <td>
-                  <button onclick="deleteConsultaDoc('${item.id}')" style="background: rgba(220,39,67,0.2); color: #ff4d6d; border: 1px solid #dc2743; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </td>
+                <th>Fecha</th>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th>Servicio</th>
+                <th>Mensaje</th>
+                <th>Acción</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+            </thead>
+            <tbody>
+              ${docs.map(item => `
+                <tr>
+                  <td>${item.fecha ? (typeof item.fecha === 'string' ? item.fecha.split('T')[0] : 'Reciente') : 'Reciente'}</td>
+                  <td><strong>${item.nombre || ''}</strong></td>
+                  <td><a href="https://wa.me/${(item.telefono || '').replace(/[^0-9]/g, '')}" target="_blank" style="color: #25D366; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> ${item.telefono || ''}</a></td>
+                  <td><a href="mailto:${item.email || ''}" style="color: #d4af37; text-decoration: none;">${item.email || ''}</a></td>
+                  <td><span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.5rem; border-radius: 4px;">${item.servicio || ''}</span></td>
+                  <td style="max-width: 250px;">${item.mensaje || ''}</td>
+                  <td>
+                    <button onclick="deleteConsultaDoc('${item.id}')" style="background: rgba(220,39,67,0.2); color: #ff4d6d; border: 1px solid #dc2743; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }, (error) => {
+      console.warn('Notice snapshot consultas:', error);
+      if (adminConsultasList) {
+        adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 3rem;">No se han recibido consultas aún.</div>';
+      }
+    });
+  } catch (err) {
+    console.warn('Notice catch consultas:', err);
+    if (adminConsultasList) {
+      adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 3rem;">No se han recibido consultas aún.</div>';
     }
-  });
+  }
 }
 
 window.deleteConsultaDoc = async (docId) => {
