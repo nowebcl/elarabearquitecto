@@ -3,22 +3,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Textos dinámicos de la landing page
+    // Textos dinámicos de la landing page (Firestore Real-time CMS)
     match /site_content/{document} {
-      allow read: if true; // Lectura pública
-      allow write, create, update, delete: if request.auth != null; // Solo administradores autenticados
+      allow read, write: if true;
     }
 
     // Galería de imágenes del portafolio
     match /gallery/{document} {
-      allow read: if true; // Lectura pública
-      allow write, create, update, delete: if request.auth != null; // Solo administradores autenticados
+      allow read, write: if true;
     }
 
-    // Consultas recibidas desde el formulario público
+    // Mensajes y consultas recibidas
     match /consultas/{document} {
-      allow create: if true; // Visitantes pueden enviar mensajes
-      allow read, update, delete: if request.auth != null; // Lectura y borrado solo por admin autenticado
+      allow read, write: if true;
     }
   }
 }

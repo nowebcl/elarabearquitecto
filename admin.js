@@ -4,7 +4,9 @@ import {
   getAuth, 
   signInWithEmailAndPassword, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
   getFirestore, 
@@ -52,7 +54,7 @@ const adminConsultasList = document.getElementById('adminConsultasList');
 const toastNotification = document.getElementById('toastNotification');
 
 // ==========================================
-// 1. AUTHENTICATION & SESSION GUARD
+// 1. AUTHENTICATION & LOCAL PERSISTENCE GUARD
 // ==========================================
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -75,7 +77,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Login Form Submit
+// Login Form Submit with explicit Local Storage Persistence
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -96,8 +98,9 @@ if (loginForm) {
     btnLogin.innerHTML = '<span>INICIANDO...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
 
     try {
+      await setPersistence(auth, browserLocalPersistence);
       await signInWithEmailAndPassword(auth, email, password);
-      showToast('¡Sesión iniciada!');
+      showToast('¡Sesión iniciada con éxito!');
     } catch (error) {
       console.error('Error de login:', error);
       if (loginError) {
@@ -117,6 +120,7 @@ if (btnTopLogout) {
     try {
       await signOut(auth);
       showToast('Sesión cerrada');
+      window.location.reload();
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
     }
@@ -158,19 +162,19 @@ if (btnTopSaveLive) {
         savedSuccessfully = await visualEditorIframe.contentWindow.saveVisualEdits();
       }
 
-      // 2. Fallback to direct iframe DOM read
+      // 2. Direct DOM read fallback
       if (!savedSuccessfully && visualEditorIframe && visualEditorIframe.contentDocument) {
         const iframeDoc = visualEditorIframe.contentDocument;
         const updatedData = {
-          heroTitle: iframeDoc.getElementById('heroTitle') ? iframeDoc.getElementById('heroTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
-          heroSubtitle: iframeDoc.getElementById('heroSubtitle') ? iframeDoc.getElementById('heroSubtitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+          heroTitle: iframeDoc.getElementById('heroTitle') ? iframeDoc.getElementById('heroTitle').innerHTML.trim() : '',
+          heroSubtitle: iframeDoc.getElementById('heroSubtitle') ? iframeDoc.getElementById('heroSubtitle').innerHTML.trim() : '',
           heroLocation: iframeDoc.getElementById('heroLocation') ? iframeDoc.getElementById('heroLocation').textContent.trim() : '',
           introHeading: iframeDoc.getElementById('introHeading') ? iframeDoc.getElementById('introHeading').textContent.trim() : '',
           introTitle: iframeDoc.getElementById('introTitle') ? iframeDoc.getElementById('introTitle').textContent.trim() : '',
           aboutTitle: iframeDoc.getElementById('aboutTitle') ? iframeDoc.getElementById('aboutTitle').textContent.trim() : '',
           aboutP1: iframeDoc.getElementById('aboutP1') ? iframeDoc.getElementById('aboutP1').textContent.trim() : '',
           aboutP2: iframeDoc.getElementById('aboutP2') ? iframeDoc.getElementById('aboutP2').textContent.trim() : '',
-          ctaTitle: iframeDoc.getElementById('ctaTitle') ? iframeDoc.getElementById('ctaTitle').innerHTML.replace(/<br>/gi, '\n').trim() : '',
+          ctaTitle: iframeDoc.getElementById('ctaTitle') ? iframeDoc.getElementById('ctaTitle').innerHTML.trim() : '',
           ctaDesc: iframeDoc.getElementById('ctaDesc') ? iframeDoc.getElementById('ctaDesc').textContent.trim() : '',
           updatedAt: new Date().toISOString()
         };
@@ -180,7 +184,7 @@ if (btnTopSaveLive) {
       }
 
       if (saveLabel) saveLabel.textContent = '¡Guardado!';
-      showToast('¡Cambios guardados con éxito en la base de datos!');
+      showToast('¡Cambios guardados permanentemente en la base de datos!');
 
       setTimeout(() => {
         btnTopSaveLive.disabled = false;
@@ -189,7 +193,7 @@ if (btnTopSaveLive) {
 
     } catch (err) {
       console.error('Error al guardar cambios:', err);
-      showToast('Cambios registrados en la página.');
+      showToast('Error al guardar cambios.');
       btnTopSaveLive.disabled = false;
       if (saveLabel) saveLabel.textContent = originalText;
     }

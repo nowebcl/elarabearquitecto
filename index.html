@@ -469,7 +469,7 @@
   <!-- Firebase SDK & Firestore Integration -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
       getFirestore, 
       collection, 
@@ -509,6 +509,9 @@
     window.auth = auth;
     window.storage = storage;
     window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+    window.setPersistence = setPersistence;
+    window.browserLocalPersistence = browserLocalPersistence;
     window.addDoc = addDoc;
     window.getDoc = getDoc;
     window.doc = doc;
