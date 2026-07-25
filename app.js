@@ -483,19 +483,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenVisualAddImage = document.getElementById('btnOpenVisualAddImage');
   const visualGalleryModal = document.getElementById('visualGalleryModal');
   const btnCloseVisualGalleryModal = document.getElementById('btnCloseVisualGalleryModal');
+  const visualGalleryModalBackdrop = document.getElementById('visualGalleryModalBackdrop');
   const visualGalleryForm = document.getElementById('visualGalleryForm');
 
   if (btnOpenVisualAddImage && visualGalleryModal) {
     btnOpenVisualAddImage.addEventListener('click', () => {
       visualGalleryModal.style.display = 'flex';
+      visualGalleryModal.classList.add('active');
     });
   }
 
-  if (btnCloseVisualGalleryModal && visualGalleryModal) {
-    btnCloseVisualGalleryModal.addEventListener('click', () => {
+  const closeGalleryModal = () => {
+    if (visualGalleryModal) {
       visualGalleryModal.style.display = 'none';
-    });
-  }
+      visualGalleryModal.classList.remove('active');
+    }
+  };
+
+  if (btnCloseVisualGalleryModal) btnCloseVisualGalleryModal.addEventListener('click', closeGalleryModal);
+  if (visualGalleryModalBackdrop) visualGalleryModalBackdrop.addEventListener('click', closeGalleryModal);
 
   if (visualGalleryForm) {
     visualGalleryForm.addEventListener('submit', async (e) => {
@@ -564,7 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> SUBIR E INSERTAR EN LA GALERÍA';
             btnSubmit.style.background = '';
           }
-          if (visualGalleryModal) visualGalleryModal.style.display = 'none';
+          closeGalleryModal();
         }, 1500);
 
       } catch (err) {

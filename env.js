@@ -1,5 +1,5 @@
 // Configuración de variables de entorno públicas para Supabase
 window.SUPABASE_CONFIG = {
-  url: "PON_TU_SUPABASE_URL_AQUI",
-  anonKey: "PON_TU_SUPABASE_ANON_KEY_AQUI"
+  url: "https://rziwnxyzavifswyzvrad.supabase.co",
+  anonKey: "sb_publishable_LBiG54rXTzj4TPkp45kxfQ_hQxvAYxW"
 };

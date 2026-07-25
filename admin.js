@@ -1,7 +1,12 @@
 // Minimal Admin CMS Top Bar & Visual Editor JavaScript - El Arabe Arquitecto (Supabase Version)
 
+document.addEventListener('DOMContentLoaded', () => {
 // Initialize Supabase from global config
-const supabase = window.supabaseClient;
+const supabase = window.supabaseClient || (window.supabase && window.SUPABASE_CONFIG?.url ? window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey) : null);
+
+if (!supabase) {
+  console.error('Error: Cliente de Supabase no inicializado en admin.js');
+}
 
 // DOM Elements
 const adminTopBar = document.getElementById('adminTopBar');
@@ -94,7 +99,15 @@ if (loginForm) {
       console.error('Error de login:', error);
       if (loginError) {
         loginError.style.display = 'block';
-        loginError.textContent = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
+        let errText = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
+        if (error.message && (error.message.includes('Email not confirmed') || error.message.includes('not confirmed'))) {
+          errText = 'El correo no está confirmado en Supabase. Ve a Authentication -> Users y regístralo marcando la casilla "Auto-confirm user" o desactiva "Confirm Email" en los proveedores.';
+        } else if (error.message && error.message.includes('Invalid login credentials')) {
+          errText = 'Correo o contraseña no válidos. Verifica en Supabase (Authentication -> Users) que el usuario esté creado.';
+        } else if (error.message) {
+          errText = `Error al entrar: ${error.message}`;
+        }
+        loginError.textContent = errText;
       }
     } else {
       showToast('¡Sesión iniciada con éxito!');
@@ -299,3 +312,4 @@ function showToast(msg) {
     toastNotification.classList.remove('active');
   }, 3500);
 }
+}); // Fin de DOMContentLoaded
