@@ -451,68 +451,23 @@
     </div>
   </div>
 
-  <!-- Firebase SDK & Firestore Integration -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      getDoc, 
-      doc, 
-      setDoc, 
-      deleteDoc,
-      onSnapshot, 
-      serverTimestamp, 
-      query, 
-      orderBy 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { 
-      getStorage, 
-      ref, 
-      uploadBytesResumable, 
-      getDownloadURL, 
-      deleteObject 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBhRM0PFeKfBQetEa40diX7ExbTaxeDkMc",
-      authDomain: "elarabe-b1c76.firebaseapp.com",
-      projectId: "elarabe-b1c76",
-      storageBucket: "elarabe-b1c76.firebasestorage.app",
-      messagingSenderId: "596637175626",
-      appId: "1:596637175626:web:dfcbfc1fc88f99afd27bb3"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const storage = getStorage(app);
-
-    window.db = db;
-    window.auth = auth;
-    window.storage = storage;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.signOut = signOut;
-    window.setPersistence = setPersistence;
-    window.browserLocalPersistence = browserLocalPersistence;
-    window.addDoc = addDoc;
-    window.getDoc = getDoc;
-    window.doc = doc;
-    window.setDoc = setDoc;
-    window.deleteDoc = deleteDoc;
-    window.onSnapshot = onSnapshot;
-    window.collection = collection;
-    window.serverTimestamp = serverTimestamp;
-    window.query = query;
-    window.orderBy = orderBy;
-    window.ref = ref;
-    window.uploadBytesResumable = uploadBytesResumable;
-    window.getDownloadURL = getDownloadURL;
-    window.deleteObject = deleteObject;
+  <!-- Supabase SDK & Database Integration -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="env.js"></script>
+  <script>
+    // Initialize Supabase Client
+    const supabaseUrl = window.SUPABASE_CONFIG.url;
+    const supabaseAnonKey = window.SUPABASE_CONFIG.anonKey;
+    
+    if (supabaseUrl && supabaseUrl !== "PON_TU_SUPABASE_URL_AQUI") {
+      window.supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+    } else {
+      console.warn("⚠️ FALTA CONFIGURAR SUPABASE: Agrega tu URL y Key en env.js");
+      window.supabaseClient = null;
+    }
 
     if (typeof window.onFirebaseReady === 'function') {
+      // Renamed internally but keeping hook for backwards compatibility in app.js
       window.onFirebaseReady();
     }
   </script>

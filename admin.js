@@ -1,36 +1,7 @@
-// Minimal Admin CMS Top Bar & Visual Editor JavaScript - El Arabe Arquitecto
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  onSnapshot, 
-  collection, 
-  deleteDoc 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// Minimal Admin CMS Top Bar & Visual Editor JavaScript - El Arabe Arquitecto (Supabase Version)
 
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBhRM0PFeKfBQetEa40diX7ExbTaxeDkMc",
-  authDomain: "elarabe-b1c76.firebaseapp.com",
-  projectId: "elarabe-b1c76",
-  storageBucket: "elarabe-b1c76.firebasestorage.app",
-  messagingSenderId: "596637175626",
-  appId: "1:596637175626:web:dfcbfc1fc88f99afd27bb3"
-};
-
-// Initialize Firebase Services
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Initialize Supabase from global config
+const supabase = window.supabaseClient;
 
 // DOM Elements
 const adminTopBar = document.getElementById('adminTopBar');
@@ -56,7 +27,18 @@ const toastNotification = document.getElementById('toastNotification');
 // ==========================================
 // 1. AUTHENTICATION & LOCAL PERSISTENCE GUARD
 // ==========================================
-onAuthStateChanged(auth, (user) => {
+
+async function checkAuthSession() {
+  if (!supabase) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  updateUIForSession(session?.user);
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    updateUIForSession(session?.user);
+  });
+}
+
+function updateUIForSession(user) {
   if (user) {
     if (adminTopBar) adminTopBar.style.display = 'flex';
     if (loginView) loginView.style.display = 'none';
@@ -68,19 +50,25 @@ onAuthStateChanged(auth, (user) => {
     }
 
     subscribeConsultasList();
-
   } else {
     if (adminTopBar) adminTopBar.style.display = 'none';
     if (loginView) loginView.style.display = 'block';
     if (viewVisualEditor) viewVisualEditor.style.display = 'none';
     if (viewConsultas) viewConsultas.style.display = 'none';
   }
-});
+}
 
-// Login Form Submit with explicit Local Storage Persistence
+// Initial check
+checkAuthSession();
+
+// Login Form Submit
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!supabase) {
+      alert('Falta configurar Supabase en env.js');
+      return;
+    }
     if (loginError) loginError.style.display = 'none';
 
     const email = loginEmail.value.trim();
@@ -97,20 +85,23 @@ if (loginForm) {
     btnLogin.disabled = true;
     btnLogin.innerHTML = '<span>INICIANDO...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
 
-    try {
-      await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
-      showToast('¡Sesión iniciada con éxito!');
-    } catch (error) {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
       console.error('Error de login:', error);
       if (loginError) {
         loginError.style.display = 'block';
         loginError.textContent = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
       }
-    } finally {
-      btnLogin.disabled = false;
-      btnLogin.innerHTML = '<span>INICIAR SESIÓN</span> <i class="fa-solid fa-arrow-right"></i>';
+    } else {
+      showToast('¡Sesión iniciada con éxito!');
     }
+
+    btnLogin.disabled = false;
+    btnLogin.innerHTML = '<span>INICIAR SESIÓN</span> <i class="fa-solid fa-arrow-right"></i>';
   });
 }
 
@@ -118,7 +109,7 @@ if (loginForm) {
 if (btnTopLogout) {
   btnTopLogout.addEventListener('click', async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
       showToast('Sesión cerrada');
       window.location.reload();
     } catch (err) {
@@ -175,11 +166,14 @@ if (btnTopSaveLive) {
           aboutP1: iframeDoc.getElementById('aboutP1') ? iframeDoc.getElementById('aboutP1').textContent.trim() : '',
           aboutP2: iframeDoc.getElementById('aboutP2') ? iframeDoc.getElementById('aboutP2').textContent.trim() : '',
           ctaTitle: iframeDoc.getElementById('ctaTitle') ? iframeDoc.getElementById('ctaTitle').innerHTML.trim() : '',
-          ctaDesc: iframeDoc.getElementById('ctaDesc') ? iframeDoc.getElementById('ctaDesc').textContent.trim() : '',
-          updatedAt: new Date().toISOString()
+          ctaDesc: iframeDoc.getElementById('ctaDesc') ? iframeDoc.getElementById('ctaDesc').textContent.trim() : ''
         };
 
-        await setDoc(doc(db, 'site_content', 'landing'), updatedData, { merge: true });
+        const { error } = await supabase
+          .from('site_content')
+          .upsert({ id: 'landing', data: updatedData, updated_at: new Date().toISOString() });
+        
+        if (error) throw error;
         savedSuccessfully = true;
       }
 
@@ -200,75 +194,96 @@ if (btnTopSaveLive) {
   });
 }
 
-// Consultas Realtime Subscription (Hanging prevention)
-function subscribeConsultasList() {
+// Consultas Realtime Subscription (Supabase)
+let consultasSubscription = null;
+
+async function subscribeConsultasList() {
+  if (!supabase) return;
+
   try {
-    const consultasRef = collection(db, 'consultas');
-    onSnapshot(consultasRef, (snapshot) => {
-      if (topConsultasBadge) topConsultasBadge.textContent = snapshot ? snapshot.size : 0;
+    // 1. Initial fetch
+    const { data: snapshot, error } = await supabase
+      .from('consultas')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (!snapshot || snapshot.empty) {
-        if (adminConsultasList) {
-          adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 3rem;">No se han recibido consultas aún.</div>';
-        }
-        return;
-      }
+    if (error) throw error;
+    renderConsultas(snapshot);
 
-      const docs = [];
-      snapshot.forEach(d => docs.push({ id: d.id, ...d.data() }));
-
-      if (adminConsultasList) {
-        adminConsultasList.innerHTML = `
-          <table class="consultas-table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Correo</th>
-                <th>Servicio</th>
-                <th>Mensaje</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${docs.map(item => `
-                <tr>
-                  <td>${item.fecha ? (typeof item.fecha === 'string' ? item.fecha.split('T')[0] : 'Reciente') : 'Reciente'}</td>
-                  <td><strong>${item.nombre || ''}</strong></td>
-                  <td><a href="https://wa.me/${(item.telefono || '').replace(/[^0-9]/g, '')}" target="_blank" style="color: #25D366; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> ${item.telefono || ''}</a></td>
-                  <td><a href="mailto:${item.email || ''}" style="color: #d4af37; text-decoration: none;">${item.email || ''}</a></td>
-                  <td><span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.5rem; border-radius: 4px;">${item.servicio || ''}</span></td>
-                  <td style="max-width: 250px;">${item.mensaje || ''}</td>
-                  <td>
-                    <button onclick="deleteConsultaDoc('${item.id}')" style="background: rgba(220,39,67,0.2); color: #ff4d6d; border: 1px solid #dc2743; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
-                      <i class="fa-solid fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-      }
-    }, (error) => {
-      console.warn('Notice snapshot consultas:', error);
-      if (adminConsultasList) {
-        adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 3rem;">No se han recibido consultas aún.</div>';
-      }
-    });
+    // 2. Subscribe to real-time changes
+    if (!consultasSubscription) {
+      consultasSubscription = supabase
+        .channel('public:consultas')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'consultas' }, async () => {
+           const { data: newSnapshot } = await supabase
+            .from('consultas')
+            .select('*')
+            .order('created_at', { ascending: false });
+           renderConsultas(newSnapshot);
+        })
+        .subscribe();
+    }
   } catch (err) {
-    console.warn('Notice catch consultas:', err);
+    console.warn('Notice fetch consultas:', err);
+    renderConsultas(null);
+  }
+}
+
+function renderConsultas(docs) {
+  if (topConsultasBadge) topConsultasBadge.textContent = docs ? docs.length : 0;
+
+  if (!docs || docs.length === 0) {
     if (adminConsultasList) {
       adminConsultasList.innerHTML = '<div style="color: #888; text-align: center; padding: 3rem;">No se han recibido consultas aún.</div>';
     }
+    return;
+  }
+
+  if (adminConsultasList) {
+    adminConsultasList.innerHTML = `
+      <table class="consultas-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Servicio</th>
+            <th>Mensaje</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${docs.map(item => `
+            <tr>
+              <td>${item.created_at ? item.created_at.split('T')[0] : 'Reciente'}</td>
+              <td><strong>${item.name || item.nombre || ''}</strong></td>
+              <td><a href="https://wa.me/${(item.phone || item.telefono || '').replace(/[^0-9]/g, '')}" target="_blank" style="color: #25D366; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> ${item.phone || item.telefono || ''}</a></td>
+              <td><a href="mailto:${item.email || ''}" style="color: #d4af37; text-decoration: none;">${item.email || ''}</a></td>
+              <td><span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.5rem; border-radius: 4px;">${item.servicio || 'General'}</span></td>
+              <td style="max-width: 250px;">${item.message || item.mensaje || ''}</td>
+              <td>
+                <button onclick="deleteConsultaDoc('${item.id}')" style="background: rgba(220,39,67,0.2); color: #ff4d6d; border: 1px solid #dc2743; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
   }
 }
 
 window.deleteConsultaDoc = async (docId) => {
   if (!confirm('¿Borrar esta consulta de la base de datos?')) return;
   try {
-    await deleteDoc(doc(db, 'consultas', docId));
+    const { error } = await supabase
+      .from('consultas')
+      .delete()
+      .eq('id', docId);
+    
+    if (error) throw error;
     showToast('Consulta eliminada');
   } catch (err) {
     showToast('Error al borrar: ' + err.message);

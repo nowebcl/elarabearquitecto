@@ -1,6 +1,7 @@
-// Clean Application JS - El Arabe Arquitecto
+// Clean Application JS - El Arabe Arquitecto (Supabase Powered)
 document.addEventListener('DOMContentLoaded', () => {
-  
+  const supabase = window.supabaseClient;
+
   // 1. Navbar Scroll Effect
   const navbar = document.querySelector('.navbar');
   if (navbar) {
@@ -172,84 +173,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
   bindGalleryItemEvents();
 
-  // 5. Real-time Text Sync from Cloud Firestore (site_content/landing)
-  function initDynamicContentSync() {
-    if (!window.db || !window.doc || !window.onSnapshot) {
-      setTimeout(initDynamicContentSync, 300);
-      return;
-    }
+  // 5. Real-time Text Sync from Supabase (site_content table)
+  async function initDynamicContentSync() {
+    if (!supabase) return;
 
     try {
-      const docRef = window.doc(window.db, 'site_content', 'landing');
-      window.onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          const isEditing = document.activeElement && document.activeElement.isContentEditable;
-          
-          if (!isEditing) {
-            if (data.heroTitle && document.getElementById('heroTitle')) document.getElementById('heroTitle').innerHTML = data.heroTitle.replace(/\n/g, '<br>');
-            if (data.heroSubtitle && document.getElementById('heroSubtitle')) document.getElementById('heroSubtitle').innerHTML = data.heroSubtitle.replace(/\n/g, '<br>');
-            if (data.heroLocation && document.getElementById('heroLocation')) document.getElementById('heroLocation').textContent = data.heroLocation;
-            if (data.introHeading && document.getElementById('introHeading')) document.getElementById('introHeading').textContent = data.introHeading;
-            if (data.introTitle && document.getElementById('introTitle')) document.getElementById('introTitle').textContent = data.introTitle;
-            if (data.aboutTitle && document.getElementById('aboutTitle')) document.getElementById('aboutTitle').textContent = data.aboutTitle;
-            if (data.aboutP1 && document.getElementById('aboutP1')) document.getElementById('aboutP1').textContent = data.aboutP1;
-            if (data.aboutP2 && document.getElementById('aboutP2')) document.getElementById('aboutP2').textContent = data.aboutP2;
-            if (data.ctaTitle && document.getElementById('ctaTitle')) document.getElementById('ctaTitle').innerHTML = data.ctaTitle.replace(/\n/g, '<br>');
-            if (data.ctaDesc && document.getElementById('ctaDesc')) document.getElementById('ctaDesc').textContent = data.ctaDesc;
+      const { data: docSnap, error } = await supabase
+        .from('site_content')
+        .select('data')
+        .eq('id', 'landing')
+        .single();
+
+      if (!error && docSnap && docSnap.data) {
+        applyContentData(docSnap.data);
+      }
+
+      // Realtime subscription
+      supabase
+        .channel('public:site_content')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'site_content', filter: 'id=eq.landing' }, (payload) => {
+          if (payload && payload.new && payload.new.data) {
+            applyContentData(payload.new.data);
           }
-        }
-      });
+        })
+        .subscribe();
     } catch (e) {
       console.warn('Dynamic content sync notice:', e);
     }
   }
 
-  // 6. Real-time Gallery Sync from Cloud Firestore (gallery)
-  function initDynamicGallerySync() {
-    if (!window.db || !window.collection || !window.onSnapshot) {
-      setTimeout(initDynamicGallerySync, 400);
-      return;
-    }
+  function applyContentData(data) {
+    const isEditing = document.activeElement && document.activeElement.isContentEditable;
+    if (isEditing) return;
+
+    if (data.heroTitle && document.getElementById('heroTitle')) document.getElementById('heroTitle').innerHTML = data.heroTitle.replace(/\n/g, '<br>');
+    if (data.heroSubtitle && document.getElementById('heroSubtitle')) document.getElementById('heroSubtitle').innerHTML = data.heroSubtitle.replace(/\n/g, '<br>');
+    if (data.heroLocation && document.getElementById('heroLocation')) document.getElementById('heroLocation').textContent = data.heroLocation;
+    if (data.introHeading && document.getElementById('introHeading')) document.getElementById('introHeading').textContent = data.introHeading;
+    if (data.introTitle && document.getElementById('introTitle')) document.getElementById('introTitle').textContent = data.introTitle;
+    if (data.aboutTitle && document.getElementById('aboutTitle')) document.getElementById('aboutTitle').textContent = data.aboutTitle;
+    if (data.aboutP1 && document.getElementById('aboutP1')) document.getElementById('aboutP1').textContent = data.aboutP1;
+    if (data.aboutP2 && document.getElementById('aboutP2')) document.getElementById('aboutP2').textContent = data.aboutP2;
+    if (data.ctaTitle && document.getElementById('ctaTitle')) document.getElementById('ctaTitle').innerHTML = data.ctaTitle.replace(/\n/g, '<br>');
+    if (data.ctaDesc && document.getElementById('ctaDesc')) document.getElementById('ctaDesc').textContent = data.ctaDesc;
+  }
+
+  // 6. Real-time Gallery Sync from Supabase (gallery table)
+  async function initDynamicGallerySync() {
+    if (!supabase) return;
 
     try {
-      const galleryRef = window.collection(window.db, 'gallery');
-      const galleryGrid = document.getElementById('galleryGrid');
+      const { data: docs, error } = await supabase
+        .from('gallery')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      window.onSnapshot(galleryRef, (snapshot) => {
-        if (!snapshot.empty && galleryGrid) {
-          const docs = [];
-          snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+      if (!error && docs && docs.length > 0) {
+        renderGalleryItems(docs);
+      }
 
-          galleryGrid.innerHTML = docs.map(item => `
-            <div class="project-card gallery-item" data-category="${item.category || 'all'}" data-src="${item.url}" data-title="${item.title || ''}" data-desc="${item.desc || ''}">
-              <img src="${item.url}" alt="${item.title || 'Proyecto'}" loading="lazy">
-              <div class="gallery-overlay">
-                <span class="gallery-category">${item.categoryLabel || item.category || 'Proyecto'}</span>
-                <h3 class="gallery-item-title">${item.title || ''}</h3>
-                <div class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-              </div>
-              ${window.isAdminLoggedIn ? `
-                <div class="admin-card-actions">
-                  <button onclick="replaceGalleryCardImage('${item.id}', '${item.storagePath || ''}')" title="Reemplazar Imagen">📷 Reemplazar</button>
-                  <button onclick="deleteGalleryCardImage('${item.id}', '${item.storagePath || ''}')" title="Eliminar Imagen">🗑️</button>
-                </div>
-              ` : ''}
-            </div>
-          `).join('');
-
-          bindGalleryItemEvents();
-        }
-      });
+      // Real-time updates
+      supabase
+        .channel('public:gallery')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery' }, async () => {
+          const { data: newDocs } = await supabase
+            .from('gallery')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (newDocs && newDocs.length > 0) renderGalleryItems(newDocs);
+        })
+        .subscribe();
     } catch (e) {
       console.warn('Dynamic gallery sync notice:', e);
     }
   }
 
-  initDynamicContentSync();
-  initDynamicGallerySync();
+  function renderGalleryItems(docs) {
+    const galleryGrid = document.getElementById('galleryGrid');
+    if (!galleryGrid) return;
 
-  // 7. Contact Form Submission connected to Cloud Firestore
+    galleryGrid.innerHTML = docs.map(item => `
+      <div class="project-card gallery-item" data-category="${item.category || 'all'}" data-src="${item.url}" data-title="${item.title || ''}" data-desc="${item.desc || ''}">
+        <img src="${item.url}" alt="${item.title || 'Proyecto'}" loading="lazy">
+        <div class="gallery-overlay">
+          <span class="gallery-category">${item.category_label || item.category_label || item.category || 'Proyecto'}</span>
+          <h3 class="gallery-item-title">${item.title || ''}</h3>
+          <div class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+        </div>
+        ${window.isAdminLoggedIn ? `
+          <div class="admin-card-actions">
+            <button onclick="replaceGalleryCardImage('${item.id}', '${item.storage_path || ''}')" title="Reemplazar Imagen">📷 Reemplazar</button>
+            <button onclick="deleteGalleryCardImage('${item.id}', '${item.storage_path || ''}')" title="Eliminar Imagen">🗑️</button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+
+    bindGalleryItemEvents();
+  }
+
+  // 7. Contact Form Submission connected to Supabase Database
   const ctaContactForm = document.getElementById('ctaContactForm');
   const formFeedback = document.getElementById('formFeedback');
 
@@ -305,38 +328,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (submitBtn) {
-        submitBtn.innerHTML = '<span>ENVIANDO CONSULTA...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
         submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>ENVIANDO...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
       }
 
-      const formData = {
-        nombre: name,
-        telefono: phone,
-        email: email,
-        servicio: service || 'General',
-        mensaje: message,
-        fecha: new Date().toISOString(),
-        estado: 'Nuevo'
-      };
-
       try {
-        if (window.db && window.addDoc && window.collection) {
-          await window.addDoc(window.collection(window.db, 'consultas'), formData);
-        }
+        if (!supabase) throw new Error('Falta configurar Supabase en env.js');
 
-        if (submitBtn) {
-          submitBtn.innerHTML = '<span>¡CONSULTA ENVIADA!</span> <i class="fa-solid fa-check"></i>';
-          submitBtn.style.background = '#25D366';
-          submitBtn.style.color = '#ffffff';
-        }
+        const { error } = await supabase
+          .from('consultas')
+          .insert([{ name, phone, email, servicio: service, message, created_at: new Date().toISOString() }]);
+
+        if (error) throw error;
 
         if (formFeedback) {
-          formFeedback.textContent = '¡Gracias por contactarnos! Evaluaremos tu proyecto y nos comunicaremos a la brevedad.';
+          formFeedback.textContent = '¡Tu mensaje ha sido enviado con éxito! Nos comunicaremos contigo muy pronto.';
           formFeedback.classList.remove('error');
           formFeedback.classList.add('success');
         }
 
         ctaContactForm.reset();
+        if (submitBtn) {
+          submitBtn.innerHTML = '<span>¡ENVIADO CORRECTAMENTE!</span> <i class="fa-solid fa-check"></i>';
+          submitBtn.style.background = '#25D366';
+          submitBtn.style.color = '#fff';
+        }
 
         setTimeout(() => {
           if (submitBtn) {
@@ -345,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.style.background = '';
             submitBtn.style.color = '';
           }
-        }, 5000);
+        }, 4000);
 
       } catch (error) {
         console.error('Error enviando consulta:', error);
@@ -355,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (formFeedback) {
-          formFeedback.textContent = 'Hubo un error al enviar tu mensaje. Verifica tu conexión e inténtalo nuevamente.';
+          formFeedback.textContent = 'Hubo un error al enviar tu mensaje. Verifica tu conexión o base de datos.';
           formFeedback.classList.remove('success');
           formFeedback.classList.add('error');
         }
@@ -373,17 +389,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 8. Admin Mode Guard & Live Visual Text Editing
-  function initVisualEditorMode() {
+  async function initVisualEditorMode() {
     // SECURITY: Never enable editor mode unless we are embedded inside the admin panel iframe.
     if (window.self === window.top) {
       return;
     }
 
-    if (!window.auth || !window.onAuthStateChanged) {
-      setTimeout(initVisualEditorMode, 150);
-      return;
-    }
+    if (!supabase) return;
 
+    const { data: { session } } = await supabase.auth.getSession();
+    applyEditorMode(session?.user);
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      applyEditorMode(session?.user);
+    });
+  }
+
+  function applyEditorMode(user) {
     const adminGalleryHeaderBtn = document.getElementById('adminGalleryHeaderBtn');
     const editableIds = [
       'heroTitle', 'heroSubtitle', 'heroLocation',
@@ -391,38 +413,37 @@ document.addEventListener('DOMContentLoaded', () => {
       'aboutP1', 'aboutP2', 'ctaTitle', 'ctaDesc'
     ];
 
-    window.onAuthStateChanged(window.auth, (user) => {
-      if (user) {
-        window.isAdminLoggedIn = true;
-        if (adminGalleryHeaderBtn) adminGalleryHeaderBtn.style.display = 'block';
+    if (user) {
+      window.isAdminLoggedIn = true;
+      if (adminGalleryHeaderBtn) adminGalleryHeaderBtn.style.display = 'block';
 
-        editableIds.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.contentEditable = 'true';
-            el.classList.add('editable-active');
-          }
-        });
+      editableIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.contentEditable = 'true';
+          el.classList.add('editable-active');
+        }
+      });
 
-        initDynamicGallerySync();
+      initDynamicGallerySync();
+    } else {
+      window.isAdminLoggedIn = false;
+      if (adminGalleryHeaderBtn) adminGalleryHeaderBtn.style.display = 'none';
 
-      } else {
-        window.isAdminLoggedIn = false;
-        if (adminGalleryHeaderBtn) adminGalleryHeaderBtn.style.display = 'none';
-
-        editableIds.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.contentEditable = 'false';
-            el.classList.remove('editable-active');
-          }
-        });
-      }
-    });
+      editableIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.contentEditable = 'false';
+          el.classList.remove('editable-active');
+        }
+      });
+    }
   }
 
   // 9. Global Save Function for Admin Panel Top Bar
   window.saveVisualEdits = async () => {
+    if (!supabase) return false;
+
     const getHtml = (id) => {
       const el = document.getElementById(id);
       return el ? el.innerHTML.replace(/<br>/gi, '\n').trim() : '';
@@ -442,18 +463,23 @@ document.addEventListener('DOMContentLoaded', () => {
       aboutP1: getText('aboutP1'),
       aboutP2: getText('aboutP2'),
       ctaTitle: getHtml('ctaTitle'),
-      ctaDesc: getText('ctaDesc'),
-      updatedAt: new Date().toISOString()
+      ctaDesc: getText('ctaDesc')
     };
 
-    if (window.db && window.doc && window.setDoc) {
-      await window.setDoc(window.doc(window.db, 'site_content', 'landing'), updatedData, { merge: true });
+    try {
+      const { error } = await supabase
+        .from('site_content')
+        .upsert({ id: 'landing', data: updatedData, updated_at: new Date().toISOString() });
+      
+      if (error) throw error;
       return true;
+    } catch (e) {
+      console.error('Error saveVisualEdits:', e);
+      return false;
     }
-    return false;
   };
 
-  // 10. Gallery Upload Modal Logic
+  // 10. Gallery Upload Modal Logic (Supabase Storage)
   const btnOpenVisualAddImage = document.getElementById('btnOpenVisualAddImage');
   const visualGalleryModal = document.getElementById('visualGalleryModal');
   const btnCloseVisualGalleryModal = document.getElementById('btnCloseVisualGalleryModal');
@@ -495,44 +521,57 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        const storagePath = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-        const storageRef = window.ref(window.storage, storagePath);
-        const uploadTask = window.uploadBytesResumable(storageRef, file);
+        if (!supabase) throw new Error('Falta configurar Supabase');
+        
+        const storagePath = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        
+        // 1. Upload to Supabase Storage
+        const { error: uploadError } = await supabase
+          .storage
+          .from('gallery')
+          .upload(storagePath, file);
 
-        uploadTask.on('state_changed', null, (err) => console.error(err), async () => {
-          const downloadURL = await window.getDownloadURL(uploadTask.snapshot.ref);
+        if (uploadError) throw uploadError;
 
-          await window.addDoc(window.collection(window.db, 'gallery'), {
+        // 2. Get Public URL
+        const { data: publicUrlData } = supabase.storage.from('gallery').getPublicUrl(storagePath);
+        const downloadURL = publicUrlData.publicUrl;
+
+        // 3. Insert into database
+        const { error: dbError } = await supabase
+          .from('gallery')
+          .insert([{
             title,
             category,
-            categoryLabel: categoryLabels[category] || category,
+            category_label: categoryLabels[category] || category,
             desc,
             url: downloadURL,
-            storagePath,
-            timestamp: new Date().toISOString()
-          });
+            storage_path: storagePath,
+            created_at: new Date().toISOString()
+          }]);
 
+        if (dbError) throw dbError;
+
+        if (btnSubmit) {
+          btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> ¡IMAGEN AGREGADA!';
+          btnSubmit.style.background = '#25D366';
+        }
+
+        setTimeout(() => {
+          visualGalleryForm.reset();
           if (btnSubmit) {
-            btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> ¡IMAGEN AGREGADA!';
-            btnSubmit.style.background = '#25D366';
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> SUBIR E INSERTAR EN LA GALERÍA';
+            btnSubmit.style.background = '';
           }
-
-          setTimeout(() => {
-            visualGalleryForm.reset();
-            if (btnSubmit) {
-              btnSubmit.disabled = false;
-              btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> SUBIR E INSERTAR EN LA GALERÍA';
-              btnSubmit.style.background = '';
-            }
-            if (visualGalleryModal) visualGalleryModal.style.display = 'none';
-          }, 1500);
-        });
+          if (visualGalleryModal) visualGalleryModal.style.display = 'none';
+        }, 1500);
 
       } catch (err) {
         console.error('Error subiendo imagen:', err);
         if (btnSubmit) {
           btnSubmit.disabled = false;
-          btnSubmit.innerHTML = 'ERROR AL SUBIR';
+          btnSubmit.innerHTML = 'ERROR AL SUBIR: ' + (err.message || 'Fallo');
         }
       }
     });
@@ -545,27 +584,22 @@ document.addEventListener('DOMContentLoaded', () => {
     input.accept = 'image/*';
     input.onchange = async (e) => {
       const file = e.target.files[0];
-      if (!file) return;
+      if (!file || !supabase) return;
 
-      const newStoragePath = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-      const storageRef = window.ref(window.storage, newStoragePath);
+      const newStoragePath = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
       
       try {
-        const uploadTask = window.uploadBytesResumable(storageRef, file);
-        uploadTask.on('state_changed', null, null, async () => {
-          const downloadURL = await window.getDownloadURL(uploadTask.snapshot.ref);
+        const { error: uploadError } = await supabase.storage.from('gallery').upload(newStoragePath, file);
+        if (uploadError) throw uploadError;
 
-          await window.setDoc(window.doc(window.db, 'gallery', docId), {
-            url: downloadURL,
-            storagePath: newStoragePath,
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
+        const { data: publicUrlData } = supabase.storage.from('gallery').getPublicUrl(newStoragePath);
+        const downloadURL = publicUrlData.publicUrl;
 
-          if (oldStoragePath) {
-            const oldRef = window.ref(window.storage, oldStoragePath);
-            window.deleteObject(oldRef).catch(err => console.warn(err));
-          }
-        });
+        await supabase.from('gallery').update({ url: downloadURL, storage_path: newStoragePath }).eq('id', docId);
+
+        if (oldStoragePath) {
+          await supabase.storage.from('gallery').remove([oldStoragePath]).catch(e => console.warn(e));
+        }
       } catch (err) {
         console.error('Error reemplazando imagen:', err);
       }
@@ -575,12 +609,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.deleteGalleryCardImage = async (docId, storagePath) => {
     if (!confirm('¿Borrar esta imagen de la galería?')) return;
+    if (!supabase) return;
 
     try {
-      await window.deleteDoc(window.doc(window.db, 'gallery', docId));
+      await supabase.from('gallery').delete().eq('id', docId);
       if (storagePath) {
-        const fileRef = window.ref(window.storage, storagePath);
-        window.deleteObject(fileRef).catch(err => console.warn(err));
+        await supabase.storage.from('gallery').remove([storagePath]).catch(e => console.warn(e));
       }
     } catch (err) {
       console.error('Error al borrar card:', err);
@@ -594,5 +628,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   initVisualEditorMode();
-
+  initDynamicContentSync();
+  initDynamicGallerySync();
 });
