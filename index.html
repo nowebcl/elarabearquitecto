@@ -420,7 +420,7 @@
       
       <div class="footer-bottom">
         <span>© 2026 El Arabe Arquitecto. Todos los derechos reservados.</span>
-        <span>Desarrollado por <a href="https://www.noweb.cl" target="_blank" rel="noopener" class="developer-link">NOWEB LABS</a></span>
+        <span>Desarrollado por <a href="https://www.noweb.cl" target="_blank" rel="noopener" class="developer-link">NOWEB LABS</a> | <a href="admin.html" class="developer-link" style="color: #888; text-decoration: none; margin-left: 5px;" title="Acceso Panel de Administración"><i class="fa-solid fa-lock" style="font-size: 0.75rem;"></i> Admin</a></span>
       </div>
     </div>
   </footer>
@@ -526,6 +526,10 @@
     window.uploadBytesResumable = uploadBytesResumable;
     window.getDownloadURL = getDownloadURL;
     window.deleteObject = deleteObject;
+
+    if (typeof window.onFirebaseReady === 'function') {
+      window.onFirebaseReady();
+    }
   </script>
 
   <script src="app.js"></script>

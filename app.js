@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initVisualEditorMode() {
     if (!window.auth || !window.onAuthStateChanged) {
-      setTimeout(initVisualEditorMode, 300);
+      setTimeout(initVisualEditorMode, 100);
       return;
     }
 
@@ -626,9 +626,133 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileRef = window.ref(window.storage, storagePath);
         window.deleteObject(fileRef).catch(err => console.warn(err));
       }
+    const visualGalleryForm = document.getElementById('visualGalleryForm');
+    if (btnOpenVisualAddImage && visualGalleryModal) {
+      btnOpenVisualAddImage.addEventListener('click', () => {
+        visualGalleryModal.style.display = 'flex';
+      });
+    }
+
+    if (btnCloseVisualGalleryModal && visualGalleryModal) {
+      btnCloseVisualGalleryModal.addEventListener('click', () => {
+        visualGalleryModal.style.display = 'none';
+      });
+    }
+
+    if (visualGalleryForm) {
+      visualGalleryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('vGalleryFile').files[0];
+        const title = document.getElementById('vGalleryTitle').value.trim();
+        const category = document.getElementById('vGalleryCategory').value;
+        const desc = document.getElementById('vGalleryDesc').value.trim();
+        const btnSubmit = document.getElementById('btnSubmitVGallery');
+
+        if (!file) return;
+
+        const categoryLabels = {
+          residencial: 'Residencial',
+          diseno: 'Diseño',
+          regularizacion: 'Regularización'
+        };
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SUBIENDO A STORAGE...';
+
+        try {
+          const storagePath = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+          const storageRef = window.ref(window.storage, storagePath);
+          const uploadTask = window.uploadBytesResumable(storageRef, file);
+
+          uploadTask.on('state_changed', null, (err) => console.error(err), async () => {
+            const downloadURL = await window.getDownloadURL(uploadTask.snapshot.ref);
+
+            await window.addDoc(window.collection(window.db, 'gallery'), {
+              title,
+              category,
+              categoryLabel: categoryLabels[category] || category,
+              desc,
+              url: downloadURL,
+              storagePath,
+              timestamp: new Date().toISOString()
+            });
+
+            btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> ¡IMAGEN AGREGADA!';
+            btnSubmit.style.background = '#25D366';
+
+            setTimeout(() => {
+              visualGalleryForm.reset();
+              btnSubmit.disabled = false;
+              btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> SUBIR E INSERTAR EN LA GALERÍA';
+              btnSubmit.style.background = '';
+              visualGalleryModal.style.display = 'none';
+            }, 1500);
+          });
+
+        } catch (err) {
+          console.error('Error subiendo imagen desde modal:', err);
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = 'ERROR AL SUBIR';
+        }
+      });
+    }
+  }
+
+  // Global functions for direct card actions on landing page
+  window.replaceGalleryCardImage = (docId, oldStoragePath) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const newStoragePath = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const storageRef = window.ref(window.storage, newStoragePath);
+      
+      try {
+        const uploadTask = window.uploadBytesResumable(storageRef, file);
+        uploadTask.on('state_changed', null, null, async () => {
+          const downloadURL = await window.getDownloadURL(uploadTask.snapshot.ref);
+
+          // Update Firestore doc
+          await window.setDoc(window.doc(window.db, 'gallery', docId), {
+            url: downloadURL,
+            storagePath: newStoragePath,
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+
+          // Clean old storage file
+          if (oldStoragePath) {
+            const oldRef = window.ref(window.storage, oldStoragePath);
+            window.deleteObject(oldRef).catch(err => console.warn(err));
+          }
+        });
+      } catch (err) {
+        console.error('Error reemplazando imagen:', err);
+      }
+    };
+    input.click();
+  };
+
+  window.deleteGalleryCardImage = async (docId, storagePath) => {
+    if (!confirm('¿Borrar esta imagen de la galería?')) return;
+
+    try {
+      await window.deleteDoc(window.doc(window.db, 'gallery', docId));
+      if (storagePath) {
+        const fileRef = window.ref(window.storage, storagePath);
+        window.deleteObject(fileRef).catch(err => console.warn(err));
+      }
     } catch (err) {
       console.error('Error al borrar card:', err);
     }
+  };
+
+  window.onFirebaseReady = () => {
+    initVisualEditorMode();
+    initDynamicContentSync();
+    initDynamicGallerySync();
   };
 
   initVisualEditorMode();
