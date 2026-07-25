@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS public.consultas (
     name TEXT NOT NULL,
     email TEXT NOT NULL,
     phone TEXT,
+    servicio TEXT,
     message TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
