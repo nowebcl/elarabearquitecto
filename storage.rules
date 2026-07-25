@@ -3,10 +3,10 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Archivos e imágenes de la galería
+    // Imágenes y archivos de la galería
     match /gallery/{allPaths=**} {
-      allow read: if true; // Lectura pública de imágenes
-      allow write, create, update, delete: if request.auth != null; // Subida y borrado restringido a admin autenticado
+      allow read: if true; // Lectura pública
+      allow write, create, update, delete: if request.auth != null; // Modificación y borrado solo por admin autenticado
     }
   }
 }

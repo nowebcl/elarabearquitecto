@@ -84,6 +84,14 @@ if (loginForm) {
     const email = loginEmail.value.trim();
     const password = loginPassword.value.trim();
 
+    if (!email || !password) {
+      if (loginError) {
+        loginError.style.display = 'block';
+        loginError.textContent = 'Por favor ingresa tu correo y contraseña.';
+      }
+      return;
+    }
+
     btnLogin.disabled = true;
     btnLogin.innerHTML = '<span>INICIANDO...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
 

@@ -3,3 +3,8 @@ screenshot.js
 sandfall.html
 package-lock.json
 package.json
+.vercel
+*.md
+.env
+.env.local
+.env.*
